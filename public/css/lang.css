@@ -1,0 +1,65 @@
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    padding-bottom: 50px;
+}
+.card {
+    margin-bottom: 20px;
+    box-shadow: 0 2px 15px rgba(0,0,0,0.1);
+}
+.card-body {
+    padding: 25px;
+}
+.lang-button.active {
+    font-weight: bold;
+}
+/* Myanmar font styling */
+[lang="mm"] body {
+    font-family: 'Myanmar Text', 'Padauk', sans-serif;
+}
+
+/* Flag styling */
+.flag-icon {
+    width: 20px;
+    margin-right: 8px;
+    vertical-align: text-top;
+}
+
+/* Table styling */
+.table {
+    font-size: 0.9rem;
+}
+
+.table th {
+    font-weight: 600;
+    background-color: #343a40;
+    color: white;
+}
+
+.table-striped tbody tr:nth-child(odd) {
+    background-color: rgba(0, 0, 0, 0.02);
+}
+
+.table-hover tbody tr:hover {
+    background-color: rgba(0, 0, 0, 0.05);
+}
+
+/* Badge styling */
+.badge {
+    font-size: 0.75em;
+    padding: 0.4em 0.75em;
+    font-weight: 600;
+    border-radius: 0.25rem;
+    text-transform: uppercase;
+}
+
+/* Myanmar font */
+[lang="mm"] body {
+    font-family: 'Myanmar Text', 'Padauk', sans-serif;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .table-responsive {
+        border: 1px solid #dee2e6;
+    }
+}

@@ -1,0 +1,41 @@
+/* Back to Top Button Styles */
+.back-to-top {
+  position: fixed;
+  bottom: 24px; /* spacing from bottom */
+  right: 24px; /* spacing from right */
+  width: 48px;
+  height: 48px;
+  background-color: #480bf0;
+  color: #fbfcfd; /* Gray-700 */
+  border-radius: 12px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background-color 0.3s ease, box-shadow 0.3s ease,
+    transform 0.2s ease;
+  z-index: 1000;
+  text-decoration: none;
+  user-select: none;
+  opacity: 0; /* Initially hidden */
+  visibility: hidden; /* Initially hidden */
+  transition: opacity 0.3s ease, visibility 0.3s ease; /* Smooth transition */
+}
+
+.back-to-top.show {
+  opacity: 1; /* Show button */
+  visibility: visible; /* Show button */
+}
+.back-to-top:focus,
+.back-to-top:hover {
+  background-color: #8faeec; /* Gray-100 */
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+  transform: translateY(-3px);
+  outline: none;
+}
+.back-to-top .material-icons {
+  font-size: 28px;
+  line-height: 1;
+  pointer-events: none;
+}
