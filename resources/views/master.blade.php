@@ -49,6 +49,36 @@
             @if (Auth::guard('admin')->check())
                 {{-- Admin is logged in --}}
                 <li><a href="{{ route('admin.dashboard') }}" class="text-black">Admin Dashboard</a></li>
+
+                {{-- Role-specific navigation links --}}
+                @if (Auth::guard('admin')->user()->role === 'haa_admin')
+                    {{-- <li><a href="{{ route('admin.haa') }}" class="text-black">Academic Affairs</a></li> --}}
+                @endif
+
+                @if (Auth::guard('admin')->user()->role === 'hsa_admin')
+                    {{-- <li><a href="{{ route('admin.hsa') }}" class="text-black">Staff Affairs</a></li> --}}
+                @endif
+
+                @if (Auth::guard('admin')->user()->role === 'teacher_admin')
+                    {{-- <li><a href="{{ route('admin.teacher') }}" class="text-black">Teacher Admin</a></li> --}}
+                @endif
+
+                @if (Auth::guard('admin')->user()->role === 'fa_admin')
+                    {{-- <li><a href="{{ route('admin.fa') }}" class="text-black">Finance Admin</a></li> --}}
+                @endif
+
+                {{-- HOD Admin specific link (if needed) --}}
+                @if (Auth::guard('admin')->user()->role === 'hod_admin')
+                    {{-- <li><a href="{{ route('admin.hod') }}" class="text-black">My Department</a></li> --}}
+                @endif
+
+                {{-- Global Admin specific links (if needed) --}}
+                {{-- @if (Auth::guard('admin')->user()->role === 'global_admin')
+                    <li><a href="{{ route('admin.global') }}" class="text-black">Global Admin</a></li>
+                    <li><a href="{{ route('admin.users') }}" class="text-black">Manage Users</a></li>
+                @endif --}}
+
+                {{-- Logout --}}
                 <li>
                     <a class="active" href="{{ route('admin.logout') }}"
                         onclick="event.preventDefault(); document.getElementById('admin-logout-form').submit();"

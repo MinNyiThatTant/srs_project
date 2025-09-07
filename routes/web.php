@@ -2,8 +2,12 @@
 
 use App\Http\Controllers\admin\AdminDashboardController;
 use App\Http\Controllers\admin\AdminLoginController;
+use App\Http\Controllers\admin\FaController;
 use App\Http\Controllers\admin\GlobalAdminController;
+use App\Http\Controllers\admin\HaaController;
 use App\Http\Controllers\admin\HodController;
+use App\Http\Controllers\admin\HsaController;
+use App\Http\Controllers\admin\TeacherController;
 use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DeptController;
@@ -78,21 +82,45 @@ Route::middleware(['guest:admin'])->group(function () {
     Route::post('admin/authenticate', [AdminLoginController::class, 'authenticate'])->name('admin.authenticate');
 });
 
-// Admin authenticated routes - main group
+// Admin authenticated routes
 Route::middleware(['auth:admin'])->group(function () {
     Route::get('admin/dashboard', [AdminDashboardController::class, 'index'])->name('admin.dashboard');
     Route::post('admin/logout', [AdminLoginController::class, 'logout'])->name('admin.logout');
 
-    // Global admin only routes - nested group
+    // Global admin routes
     Route::middleware(['global.admin'])->group(function () {
         Route::get('admin/global', [GlobalAdminController::class, 'index'])->name('admin.global');
         Route::get('admin/users', [GlobalAdminController::class, 'users'])->name('admin.users');
     });    
     
-    // HOD admin only routes - nested group
+    // HOD admin routes
     Route::middleware(['hod.admin'])->group(function () {
-        Route::get('admin/hod', [HodController::class, 'index'])->name('admin.hod');
+        Route::get('admin/hod', [HodController::class, 'index'])->name('admin.hod.dashboard');
         Route::get('admin/my-department', [HodController::class, 'myDepartment'])->name('admin.my-department');
+    });
+
+    // HAA admin routes
+    Route::middleware(['haa.admin'])->group(function () {
+        Route::get('admin/haa', [HaaController::class, 'index'])->name('admin.haa');
+        Route::get('admin/academic-affairs', [HaaController::class, 'academicAffairs'])->name('admin.academic-affairs');
+    });
+
+    // HSA admin routes
+    Route::middleware(['hsa.admin'])->group(function () {
+        Route::get('admin/hsa', [HsaController::class, 'index'])->name('admin.hsa');
+        Route::get('admin/staff-management', [HsaController::class, 'staffManagement'])->name('admin.staff-management');
+    });
+
+    // Teacher admin routes
+    Route::middleware(['teacher.admin'])->group(function () {
+        Route::get('admin/teacher', [TeacherController::class, 'index'])->name('admin.teacher');
+        Route::get('admin/teacher-management', [TeacherController::class, 'teacherManagement'])->name('admin.teacher-management');
+    });
+
+    // Finance admin routes
+    Route::middleware(['fa.admin'])->group(function () {
+        Route::get('admin/fa', [FaController::class, 'index'])->name('admin.fa');
+        Route::get('admin/financial-reports', [FaController::class, 'financialReports'])->name('admin.financial-reports');
     });
 });
 

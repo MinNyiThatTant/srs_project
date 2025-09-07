@@ -91,8 +91,12 @@ class Kernel extends HttpKernel
     'throttle' => \Illuminate\Routing\Middleware\ThrottleRequests::class,
     'verified' => \Illuminate\Auth\Middleware\EnsureEmailIsVerified::class,
     
-    // Custom middleware for admin roles
+    // middleware for admin roles
     'global.admin' => \App\Http\Middleware\GlobalAdmin::class,
     'hod.admin' => \App\Http\Middleware\HodAdmin::class,
+    'haa.admin' => \App\Http\Middleware\HaaAdmin::class,
+    'hsa.admin' => \App\Http\Middleware\HsaAdmin::class,
+    'teacher.admin' => \App\Http\Middleware\TeacherAdmin::class,
+    'fa.admin' => \App\Http\Middleware\FaAdmin::class,
 ];
 }

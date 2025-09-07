@@ -12,7 +12,7 @@
     {{-- <link href="css/styles.css" rel="stylesheet"> --}}
 
     <!--Icons-->
-    <script src="js/lumino.glyphs.js"></script>
+    <script src="{{asset('js/lumino.glyphs.js')}}"></script>
 
     <link rel="shortcut icon" href="{{ asset('./adminassets/compiled/svg/favicon.svg') }}" type="image/x-icon">
     <link rel="shortcut icon"
