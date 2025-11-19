@@ -18,7 +18,7 @@
     <table class="table table-hover text-center p-4 mb-4 ">
    
         <div class="container container-fluid">
-         <caption><h3 class="text-center text-success mb-4"><pre><a href="{{route('home.department1')}}"> Go to Back</a></pre></h3></caption>
+         <caption><h3 class="text-center text-success mb-4"><pre><a href="{{route('department1')}}"> Go to Back</a></pre></h3></caption>
 
     
         <thead>

@@ -4,7 +4,7 @@ namespace App\Http\Controllers\admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Application;
-use App\Models\Staff;
+use App\Models\Admin;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -13,36 +13,35 @@ class HodController extends Controller
     public function dashboard()
     {
         $admin = Auth::guard('admin')->user();
-        
+        $department = $admin->department;
+
         if ($admin->role !== 'hod_admin') {
             abort(403, 'Access denied. HOD admin only.');
         }
-        
-        $stats = $this->getDashboardStats();
-        return view('admin.dashboard-hod', compact('stats'));
-    }
 
-    private function getDashboardStats()
-    {
-        $admin = Auth::guard('admin')->user();
-        
         $stats = [
-            'department_applications' => Application::where('department', $admin->department)
-                ->where('status', 'academic_approved')
+            'department_applications' => Application::where('department', $department)->count(),
+            'pending_applications' => Application::where('department', $department)
+                ->where('status', 'pending')
                 ->count(),
-            'department_staff' => Staff::where('department', $admin->department)->count(),
-            'approved_today' => Application::where('department', $admin->department)
+            'approved_applications' => Application::where('department', $department)
                 ->where('status', 'approved')
-                ->whereDate('updated_at', today())
                 ->count(),
-            'pending_approvals' => Application::where('department', $admin->department)
+            'department_staff' => Admin::where('department', $department)
+                ->where('role', '!=', 'hod_admin')
+                ->count(),
+            'active_staff' => Admin::where('department', $department)
+                ->where('role', '!=', 'hod_admin')
+                ->count(), // Removed is_active condition
+            'department_courses' => 0,
+            'pending_applications_list' => Application::where('department', $department)
                 ->where('status', 'academic_approved')
-                ->orderBy('created_at', 'desc')
-                ->limit(10)
+                ->latest()
+                ->take(5)
                 ->get()
         ];
 
-        return $stats;
+        return view('admin.dashboard-hod', compact('stats'));
     }
 
     public function hodApplications()
@@ -93,7 +92,9 @@ class HodController extends Controller
 
         $departmentInfo = [
             'name' => $admin->department,
-            'staff_count' => Staff::where('department', $admin->department)->count(),
+            'staff_count' => Admin::where('department', $admin->department)
+                ->where('role', '!=', 'hod_admin')
+                ->count(),
             'applications_count' => Application::where('department', $admin->department)->count(),
             'pending_approvals' => Application::where('department', $admin->department)
                 ->where('status', 'academic_approved')
@@ -139,7 +140,7 @@ class HodController extends Controller
         return redirect()->back()->with('success', 'Application finally approved');
     }
 
-    // Staff Management Methods
+    // Staff Management Methods - Using Admin model
     public function staffIndex()
     {
         $admin = Auth::guard('admin')->user();
@@ -148,8 +149,11 @@ class HodController extends Controller
             abort(403, 'Access denied. HOD admin only.');
         }
 
-        $staff = Staff::where('department', $admin->department)->get();
-        return view('hod.staff-management', compact('staff'));
+        $staff = Admin::where('department', $admin->department)
+            ->where('role', '!=', 'hod_admin')
+            ->get();
+            
+        return view('admin.staff.index', compact('staff'));
     }
 
     public function staffStore(Request $request)
@@ -162,17 +166,19 @@ class HodController extends Controller
 
         $request->validate([
             'name' => 'required',
-            'email' => 'required|email',
-            'position' => 'required'
+            'email' => 'required|email|unique:admins',
+            'position' => 'required',
+            'role' => 'required|in:teacher_admin,haa_admin,fa_admin'
         ]);
 
-        Staff::create([
+        Admin::create([
             'name' => $request->name,
             'email' => $request->email,
+            'password' => bcrypt('password123'), // Default password
             'department' => $admin->department,
+            'role' => $request->role,
             'position' => $request->position,
-            'status' => 'active',
-            'created_by' => $admin->id
+            // Removed is_active as it doesn't exist in your table
         ]);
 
         return redirect()->back()->with('success', 'Staff member added successfully');
@@ -186,9 +192,24 @@ class HodController extends Controller
             abort(403, 'Access denied. HOD admin only.');
         }
 
-        $staff = Staff::where('department', $admin->department)->findOrFail($id);
+        $staff = Admin::where('department', $admin->department)
+            ->where('id', $id)
+            ->firstOrFail();
         
-        $staff->update($request->all());
+        $request->validate([
+            'name' => 'required',
+            'email' => 'required|email|unique:admins,email,' . $id,
+            'position' => 'required',
+            'role' => 'required|in:teacher_admin,haa_admin,fa_admin'
+        ]);
+
+        $staff->update([
+            'name' => $request->name,
+            'email' => $request->email,
+            'position' => $request->position,
+            'role' => $request->role,
+            // Removed is_active as it doesn't exist in your table
+        ]);
 
         return redirect()->back()->with('success', 'Staff member updated successfully');
     }
@@ -201,7 +222,10 @@ class HodController extends Controller
             abort(403, 'Access denied. HOD admin only.');
         }
 
-        $staff = Staff::where('department', $admin->department)->findOrFail($id);
+        $staff = Admin::where('department', $admin->department)
+            ->where('id', $id)
+            ->firstOrFail();
+            
         $staff->delete();
 
         return redirect()->back()->with('success', 'Staff member deleted successfully');

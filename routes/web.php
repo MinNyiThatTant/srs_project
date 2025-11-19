@@ -123,7 +123,7 @@ Route::middleware(['guest:admin'])->group(function () {
 
 // Main admin dashboard route - This should be the first route after login
 Route::middleware(['auth:admin'])->prefix('admin')->name('admin.')->group(function () {
-    
+
     // MAIN DASHBOARD - This route MUST be defined
     Route::get('dashboard', [AdminDashboardController::class, 'index'])->name('dashboard');
     Route::post('logout', [AdminLoginController::class, 'logout'])->name('logout');
@@ -172,21 +172,28 @@ Route::middleware(['auth:admin'])->prefix('admin')->name('admin.')->group(functi
     Route::post('approve-academic/{id}', [HaaController::class, 'approveAcademic'])->name('approve.academic');
 
     // ========== HOD ADMIN ROUTES ==========
+    // Route::prefix('admin')->group(function () {
+    // Route::get('hod-dashboard', [HodController::class, 'dashboard'])->name('hod.dashboard');
+    // Route::get('hod', [HodController::class, 'dashboard'])->name('hod');
+    // HOD Dashboard
     Route::get('hod-dashboard', [HodController::class, 'dashboard'])->name('hod.dashboard');
+    Route::get('hod', [HodController::class, 'dashboard'])->name('hod');
+
+    // HOD Applications
     Route::get('applications/hod', [HodController::class, 'hodApplications'])->name('applications.hod');
     Route::post('final-approve/{id}', [HodController::class, 'finalApprove'])->name('applications.final-approve');
-    Route::get('hod', [HodController::class, 'dashboard'])->name('hod.dashboard');
+    Route::post('approve-final/{id}', [HodController::class, 'approveFinal'])->name('approve.final');
+
+    // Department Management
     Route::get('my-department', [HodController::class, 'myDepartment'])->name('my-department');
     Route::get('department-applications', [HodController::class, 'departmentApplications'])->name('department.applications');
-    Route::post('approve-final/{id}', [HodController::class, 'approveFinal'])->name('approve.final');
-    
-    // Staff management
-    Route::prefix('staff')->name('staff.')->group(function () {
-        Route::get('/', [HodController::class, 'staffIndex'])->name('index');
-        Route::post('/', [HodController::class, 'staffStore'])->name('store');
-        Route::put('/{id}', [HodController::class, 'staffUpdate'])->name('update');
-        Route::delete('/{id}', [HodController::class, 'staffDestroy'])->name('destroy');
-    });
+
+    // Staff Management - ADD THESE EXACT ROUTES
+    Route::get('hod/staff', [HodController::class, 'staffIndex'])->name('hod.staff.index');
+    Route::post('hod/staff', [HodController::class, 'staffStore'])->name('hod.staff.store');
+    Route::put('hod/staff/{id}', [HodController::class, 'staffUpdate'])->name('hod.staff.update');
+    Route::delete('hod/staff/{id}', [HodController::class, 'staffDestroy'])->name('hod.staff.destroy');
+    // );
 
     // ========== HSA ADMIN ROUTES ==========
     Route::get('hsa-dashboard', [HsaController::class, 'dashboard'])->name('hsa.dashboard');
@@ -194,7 +201,7 @@ Route::middleware(['auth:admin'])->prefix('admin')->name('admin.')->group(functi
     Route::get('staff-management', [HsaController::class, 'staffManagement'])->name('staff.management');
     Route::get('teacher-management', [HsaController::class, 'teacherManagement'])->name('teacher.management');
     Route::post('assign-teacher/{id}', [HsaController::class, 'assignTeacher'])->name('assign.teacher');
-
+    
     // ========== TEACHER ADMIN ROUTES ==========
     Route::get('teacher-dashboard', [TeacherController::class, 'dashboard'])->name('teacher.dashboard');
     Route::get('teacher', [TeacherController::class, 'dashboard'])->name('teacher');
@@ -214,14 +221,14 @@ Route::get('choose-login', function () {
 
 // ========== DEBUG ROUTES (Remove in production) ==========
 if (app()->environment('local')) {
-    Route::get('/test-application', function() {
+    Route::get('/test-application', function () {
         try {
             $app = App\Models\Application::create([
                 'name' => 'Test User',
                 'email' => 'test@example.com',
                 'phone' => '09123456789',
                 'father_name' => 'Test Father',
-                'mother_name' => 'Test Mother', 
+                'mother_name' => 'Test Mother',
                 'date_of_birth' => '2000-01-01',
                 'gender' => 'male',
                 'nationality' => 'Myanmar',
@@ -237,43 +244,42 @@ if (app()->environment('local')) {
                 'status' => 'payment_pending',
                 'payment_status' => 'pending'
             ]);
-            
+
             return "Test application created successfully! ID: " . $app->id;
-            
         } catch (\Exception $e) {
             return "Error creating test application: " . $e->getMessage();
         }
     });
 
-    Route::get('/debug-admin-routes', function() {
+    Route::get('/debug-admin-routes', function () {
         $admin = Auth::guard('admin')->user();
         if (!$admin) {
             return "No admin logged in. <a href='/admin/login'>Login here</a>";
         }
-        
+
         echo "<h3>Current Admin:</h3>";
         echo "Name: " . $admin->name . "<br>";
         echo "Email: " . $admin->email . "<br>";
         echo "Role: " . $admin->role . "<br>";
         echo "ID: " . $admin->id . "<br>";
-        
+
         echo "<h3>Available Routes:</h3>";
         echo "<a href='" . route('admin.dashboard') . "'>Main Dashboard</a><br>";
-        
+
         if ($admin->role === 'global_admin') {
             echo "<a href='" . route('admin.global.dashboard') . "'>Global Dashboard</a><br>";
             echo "<a href='" . route('admin.global') . "'>Legacy Global Route</a><br>";
         }
-        
+
         echo "<h3>Session Data:</h3>";
         dump(session()->all());
     });
 }
 
 // ========== PAYMENT DEBUG ROUTES ==========
-Route::get('/check-payments', function() {
+Route::get('/check-payments', function () {
     $payments = App\Models\Payment::with('application')->get();
-    
+
     echo "<h3>Payments in Database:</h3>";
     foreach ($payments as $payment) {
         echo "ID: {$payment->id}<br>";
@@ -288,18 +294,50 @@ Route::get('/check-payments', function() {
     }
 });
 
-Route::get('/check-payment-config', function() {
+Route::get('/check-payment-config', function () {
     echo "<h3>Payment Configuration:</h3>";
-    
+
     $configs = [
         'payment.admission_fee',
         'payment.kpay_base_url',
         'payment.kpay_merchant_id',
         'payment.kpay_secret_key',
     ];
-    
+
     foreach ($configs as $config) {
         $value = config($config);
         echo "{$config}: " . ($value ? $value : 'NOT SET') . "<br>";
     }
 });
+
+
+
+
+
+
+
+
+
+//////////////////////////////////////////////////////////////////////////////////////////////
+// Debug route - add this temporarily
+Route::get('/check-hod-routes', function () {
+    echo "Checking HOD routes...<br><br>";
+
+    $routes = [
+        'hod.dashboard',
+        'applications.hod',
+        'hod.staff.index',
+        'hod.staff.store',
+        'hod.staff.update',
+        'hod.staff.destroy'
+    ];
+
+    foreach ($routes as $routeName) {
+        if (Route::has($routeName)) {
+            echo "✓ Route '$routeName' EXISTS<br>";
+        } else {
+            echo "✗ Route '$routeName' NOT FOUND<br>";
+        }
+    }
+});
+/////////////////////////////////////////////////////////////////////////////////////////////

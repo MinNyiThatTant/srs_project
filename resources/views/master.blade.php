@@ -99,14 +99,14 @@
             @endif
         @else
             {{-- No one logged in --}}
-            <li>
+            {{-- <li>
                 <a class="active" href="{{ route('login') }}"
                     style="width:auto; border-radius: 5px; cursor: pointer;">Student Login</a>
             </li>
             <li>
                 <a class="active" href="{{ route('admin.login') }}"
                     style="width:auto; border-radius: 5px; cursor: pointer; background-color: #dc3545;">Admin Login</a>
-            </li>
+            </li> --}}
         @endauth
     </ul>
 </nav>

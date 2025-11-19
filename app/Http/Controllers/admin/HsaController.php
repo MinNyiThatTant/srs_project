@@ -21,7 +21,7 @@ class HsaController extends Controller
         }
         
         $stats = $this->getDashboardStats();
-        return view('hsa.dashboard', compact('stats'));
+        return view('admin.dashboard-hsa', compact('stats')); // Changed to admin.dashboard-hsa
     }
 
     private function getDashboardStats()
@@ -43,15 +43,14 @@ class HsaController extends Controller
 
         $resolutionRate = $totalStudents > 0 ? round(($resolvedToday / $totalStudents) * 100, 1) : 0;
 
-        // Recent activities
-        $recentApplications = Application::with('user')
-            ->orderBy('created_at', 'desc')
+        // Recent activities - FIXED: Removed user relationship
+        $recentApplications = Application::orderBy('created_at', 'desc')
             ->limit(8)
             ->get()
             ->map(function($app) {
                 return (object)[
-                    'user' => $app->user,
                     'name' => $app->name,
+                    'email' => $app->email,
                     'application_id' => $app->application_id,
                     'activity_type' => 'Application Submission',
                     'department' => $app->department,
@@ -66,8 +65,8 @@ class HsaController extends Controller
             ->get()
             ->map(function($user) {
                 return (object)[
-                    'user' => $user,
                     'name' => $user->name,
+                    'email' => $user->email,
                     'activity_type' => 'Student Registration',
                     'department' => 'N/A',
                     'status' => 'active',
@@ -169,8 +168,8 @@ class HsaController extends Controller
             abort(403, 'Access denied. HSA admin only.');
         }
 
-        $staff = Admin::whereIn('role', ['hod_admin', 'teacher_admin'])->get();
-        return view('hsa.staff-management', compact('staff'));
+        $staff = Admin::whereIn('role', ['hod_admin', 'teacher_admin', 'haa_admin', 'fa_admin'])->get();
+        return view('admin.staff.management', compact('staff')); // Changed to admin.staff.management
     }
 
     public function teacherManagement()
@@ -182,7 +181,7 @@ class HsaController extends Controller
         }
 
         $teachers = Admin::where('role', 'teacher_admin')->get();
-        return view('hsa.teacher-management', compact('teachers'));
+        return view('admin.teacher.management', compact('teachers')); // Changed to admin.teacher.management
     }
 
     public function assignTeacher(Request $request, $id)
@@ -193,7 +192,38 @@ class HsaController extends Controller
             abort(403, 'Access denied. HSA admin only.');
         }
 
-        // Assign teacher logic
+        $request->validate([
+            'teacher_id' => 'required|exists:admins,id'
+        ]);
+
+        // Assign teacher logic here
+        // Example: Update application or course assignment
+
         return redirect()->back()->with('success', 'Teacher assigned successfully');
+    }
+
+    // Additional methods for HSA functionality
+    public function studentManagement()
+    {
+        $admin = Auth::guard('admin')->user();
+        
+        if ($admin->role !== 'hsa_admin') {
+            abort(403, 'Access denied. HSA admin only.');
+        }
+
+        $students = User::with('applications')->latest()->paginate(20);
+        return view('admin.student.management', compact('students'));
+    }
+
+    public function viewStudent($id)
+    {
+        $admin = Auth::guard('admin')->user();
+        
+        if ($admin->role !== 'hsa_admin') {
+            abort(403, 'Access denied. HSA admin only.');
+        }
+
+        $student = User::with('applications')->findOrFail($id);
+        return view('admin.student.view', compact('student'));
     }
 }

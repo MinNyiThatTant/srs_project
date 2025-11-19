@@ -60,6 +60,12 @@ class Application extends Model
         'gateway_response' => 'array'
     ];
 
+    // // If you have user relationship, it should look like this:
+    // public function user()
+    // {
+    //     return $this->belongsTo(User::class);
+    // }
+
     // Status constants
     const STATUS_PENDING = 'pending';
     const STATUS_PAYMENT_PENDING = 'payment_pending';

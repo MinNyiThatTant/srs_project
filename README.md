@@ -18,7 +18,14 @@ php artisan session:clear
 php artisan optimize:clear
 composer dump-autoload
 
+--------------------------------
+php artisan make:migration add_is_active_to_admins_table --table=admins
+php artisan migrate
+php artisan route:list --name=applications
 
+php artisan route:list --name=hod
+php artisan route:list | findstr "hsa"
+--------------------------------
 __________________________
 http://localhost/srs_project/public/admin/finance-applications
 http://localhost/srs_project/public/admin/fa

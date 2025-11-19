@@ -82,8 +82,10 @@
 
                         <!-- Dashboard -->
                         <li
-                            class="sidebar-item {{ request()->routeIs('admin.dashboard') || request()->routeIs('hsa.dashboard') ? 'active' : '' }}">
-                            <a href="{{ auth()->guard('admin')->check() && auth()->guard('admin')->user()->role === 'hsa_admin' ? route('admin.hsa.dashboard') : route('admin.dashboard') }}"
+                            class="sidebar-item {{ request()->routeIs('admin.dashboard') || request()->routeIs('admin.hsa.dashboard') || request()->routeIs('admin.hod.dashboard') ? 'active' : '' }}">
+                            <a href="{{ auth()->guard('admin')->check() && auth()->guard('admin')->user()->role === 'hsa_admin' ? route('admin.hsa.dashboard') : 
+                            (auth()->guard('admin')->check() && auth()->guard('admin')->user()->role === 'hod_admin' ? route('admin.hod.dashboard') : 
+                            route('admin.dashboard')) }}"
                                 class='sidebar-link'>
                                 <i class="bi bi-speedometer"></i>
                                 <span>Dashboard</span>
@@ -91,43 +93,44 @@
                         </li>
 
                         <!-- Applications -->
-                        @if(auth()->guard('admin')->check())
-                        <li
-                            class="sidebar-item has-sub {{ request()->routeIs('admin.applications.*') ? 'active' : '' }}">
-                            <a href="#" class='sidebar-link'>
-                                <i class="bi bi-files"></i>
-                                <span>Applications</span>
-                            </a>
-                            <ul class="submenu">
-                                @if (auth()->guard('admin')->user()->role === 'global_admin')
-                                    <li
-                                        class="submenu-item {{ request()->routeIs('admin.applications.all') ? 'active' : '' }}">
-                                        <a href="{{ route('admin.applications.all') }}">All Applications</a>
-                                    </li>
-                                @endif
+                        @if (auth()->guard('admin')->check())
+                            <li
+                                class="sidebar-item has-sub {{ request()->routeIs('admin.applications.*') ? 'active' : '' }}">
+                                <a href="#" class='sidebar-link'>
+                                    <i class="bi bi-files"></i>
+                                    <span>Applications</span>
+                                </a>
+                                <ul class="submenu">
+                                    @if (auth()->guard('admin')->user()->role === 'global_admin')
+                                        <li
+                                            class="submenu-item {{ request()->routeIs('admin.applications.all') ? 'active' : '' }}">
+                                            <a href="{{ route('admin.applications.all') }}">All Applications</a>
+                                        </li>
+                                    @endif
 
-                                @if (auth()->guard('admin')->user()->role === 'fa_admin')
-                                    <li
-                                        class="submenu-item {{ request()->routeIs('admin.applications.finance') ? 'active' : '' }}">
-                                        <a href="{{ route('admin.applications.finance') }}">Payment Verification</a>
-                                    </li>
-                                @endif
+                                    @if (auth()->guard('admin')->user()->role === 'fa_admin')
+                                        <li
+                                            class="submenu-item {{ request()->routeIs('admin.applications.finance') ? 'active' : '' }}">
+                                            <a href="{{ route('admin.applications.finance') }}">Payment
+                                                Verification</a>
+                                        </li>
+                                    @endif
 
-                                @if (auth()->guard('admin')->user()->role === 'haa_admin')
-                                    <li
-                                        class="submenu-item {{ request()->routeIs('admin.applications.academic') ? 'active' : '' }}">
-                                        <a href="{{ route('admin.applications.academic') }}">Academic Review</a>
-                                    </li>
-                                @endif
+                                    @if (auth()->guard('admin')->user()->role === 'haa_admin')
+                                        <li
+                                            class="submenu-item {{ request()->routeIs('admin.applications.academic') ? 'active' : '' }}">
+                                            <a href="{{ route('admin.applications.academic') }}">Academic Review</a>
+                                        </li>
+                                    @endif
 
-                                @if (auth()->guard('admin')->user()->role === 'hod_admin')
-                                    <li
-                                        class="submenu-item {{ request()->routeIs('admin.applications.hod') ? 'active' : '' }}">
-                                        <a href="{{ route('admin.applications.hod') }}">Final Approval</a>
-                                    </li>
-                                @endif
-                            </ul>
-                        </li>
+                                    @if (auth()->guard('admin')->user()->role === 'hod_admin')
+                                        <li
+                                            class="submenu-item {{ request()->routeIs('admin.applications.hod') ? 'active' : '' }}">
+                                            <a href="{{ route('admin.applications.hod') }}">Final Approval</a>
+                                        </li>
+                                    @endif
+                                </ul>
+                            </li>
                         @endif
 
                         <!-- Users - Only for Global Admin and HSA Admin -->
@@ -167,7 +170,7 @@
                         <!-- Staff Management -->
                         @if (auth()->guard('admin')->check() && in_array(auth()->guard('admin')->user()->role, ['global_admin', 'hod_admin']))
                             <li
-                                class="sidebar-item has-sub {{ request()->routeIs('hod.staff.*') || request()->routeIs('admin.teachers.*') ? 'active' : '' }}">
+                                class="sidebar-item has-sub {{ request()->routeIs('admin.hod.staff.*') || request()->routeIs('admin.teachers.*') ? 'active' : '' }}">
                                 <a href="#" class='sidebar-link'>
                                     <i class="bi bi-person-badge"></i>
                                     <span>Staff Management</span>
@@ -175,8 +178,8 @@
                                 <ul class="submenu">
                                     @if (auth()->guard('admin')->user()->role === 'hod_admin')
                                         <li
-                                            class="submenu-item {{ request()->routeIs('hod.staff.*') ? 'active' : '' }}">
-                                            <a href="{{ route('hod.staff.index') }}">Department Staff</a>
+                                            class="submenu-item {{ request()->routeIs('admin.hod.staff.*') ? 'active' : '' }}">
+                                            <a href="{{ route('admin.hod.staff.index') }}">Department Staff</a>
                                         </li>
                                     @endif
 
@@ -225,7 +228,9 @@
                             <nav aria-label="breadcrumb" class="breadcrumb-header float-start float-lg-end">
                                 <ol class="breadcrumb">
                                     <li class="breadcrumb-item"><a
-                                            href="{{ auth()->guard('admin')->check() && auth()->guard('admin')->user()->role === 'hsa_admin' ? route('hsa.dashboard') : route('admin.dashboard') }}">Dashboard</a>
+                                            href="{{ auth()->guard('admin')->check() && auth()->guard('admin')->user()->role === 'hsa_admin' ? route('admin.hsa.dashboard') : 
+                                            (auth()->guard('admin')->check() && auth()->guard('admin')->user()->role === 'hod_admin' ? route('admin.hod.dashboard') : 
+                                            route('admin.dashboard')) }}">Dashboard</a>
                                     </li>
                                     <li class="breadcrumb-item active" aria-current="page">@yield('breadcrumb', 'Home')</li>
                                 </ol>
@@ -265,9 +270,9 @@
                         <p>{{ date('Y') }} &copy; SRS - Student Registration System</p>
                     </div>
                     <div class="float-end">
-                        <p>Welcome, 
+                        <p>Welcome,
                             @auth('admin')
-                                {{ Auth::guard('admin')->user()->name ?? 'Admin' }} 
+                                {{ Auth::guard('admin')->user()->name ?? 'Admin' }}
                                 ({{ Auth::guard('admin')->user()->role ?? 'User' }})
                             @else
                                 Admin User
@@ -287,4 +292,5 @@
 
     @stack('scripts')
 </body>
+
 </html>
