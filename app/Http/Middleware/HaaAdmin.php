@@ -15,6 +15,6 @@ class HaaAdmin
             return $next($request);
         }
         
-        return redirect()->route('admin.dashboard')->with('error', 'Access denied. Head of Academic Affairs only.');
+        return redirect()->route('admin.dashboard')->with('error', 'Access denied. Academic admin only.');
     }
 }

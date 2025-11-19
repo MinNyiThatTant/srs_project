@@ -1,4 +1,8 @@
-@extends('master')
+@extends('layouts.master')
+
+@section('title', 'West Yangon Technological University - Home')
+
+@section('body-class', 'light-blue-bg')
 
 @section('content')
     <section class="main pt-5"

@@ -1,7 +1,10 @@
-@extends('master')
+@extends('layouts.master')
+
+@section('title', 'West Yangon Technological University - Home')
+
+@section('body-class', 'light-blue-bg')
 
 @section('content')
-
 <section class="main" style="background-image: url({{ asset('images/hero-bg.png') }}); height: 100vh; display: flex; justify-content: center; align-items: center;">
     <div class="container my-4 d-flex justify-content-center align-items-center" style="height: 100%;">
         <div class="card mx-auto" style="width: 25rem;">

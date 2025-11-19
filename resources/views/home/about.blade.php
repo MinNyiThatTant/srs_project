@@ -1,13 +1,16 @@
-@extends('master')
+@extends('layouts.master')
+
+@section('title', 'West Yangon Technological University - Home')
+
 @section('content')
 
 <!-- Hero Section -->
-    <section class="hero-section mb-5" style="background-image: url(images/hero-bg.png);">
-        <div class="container py-5 mt-4">
+    {{-- <section class="hero-section mb-5" style="background-image: url(images/hero-bg.png);"> --}}
+        {{-- <div class="container py-5 mt-4"> --}}
             <h1 class="display-4 font-weight-bold mb-3 text-white">About Our System</h1>
             <p class="lead text-white">Streamlining student registration for educational institutions</p>
-        </div>
-    </section>
+        {{-- </div> --}}
+    {{-- </section> --}}
 
     <!-- About Section -->
     <section class="container mb-5">
@@ -95,64 +98,92 @@
     <section class="container mb-5">
         <div class="row">
             <div class="col-12 text-center mb-5">
-                <h2>Meet Our Team</h2>
-                <p class="lead">The dedicated professionals behind our system</p>
+                <h2>Our Team</h2>
+                {{-- <p class="lead">The dedicated professionals behind our system</p> --}}
             </div>
         </div>
         <div class="row g-4">
-            <div class="col-md-6 col-lg-3">
-                <div class="card text-center h-100 border-0">
-                    <div class="card-body">
-                        <div class="team-member mx-auto mb-3">
-                            <img src="https://storage.googleapis.com/workspace-0f70711f-8b4e-4d94-86f1-2a93ccde5887/image/42a1042b-d6ed-464a-888a-a04f9347cae3.png"
-                                alt="Smiling female software developer with short brown hair working at a laptop"
-                                class="img-fluid">
-                        </div>
-                        <h4 class="card-title">Sarah Johnson</h4>
-                        <p class="text-primary fw-bold">Lead Developer</p>
-                        <p class="card-text">Oversees all technical development and system architecture.</p>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-6 col-lg-3">
-                <div class="card text-center h-100 border-0">
-                    <div class="card-body">
-                        <div class="team-member mx-auto mb-3">
-                            <img src="https://storage.googleapis.com/workspace-0f70711f-8b4e-4d94-86f1-2a93ccde5887/image/d0f2ecbc-9e2b-4fb6-8799-b349d474c9bd.png"
-                                alt="Professional male education consultant in a blue shirt reviewing documents"
-                                class="img-fluid">
-                        </div>
-                        <h4 class="card-title">Michael Chen</h4>
-                        <p class="text-primary fw-bold">Education Specialist</p>
-                        <p class="card-text">Ensures our system meets educational institution requirements.</p>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-6 col-lg-3">
+            <div class="col-md-4">
                 <div class="card text-center h-100 border-0">
                     <div class="card-body">
                         <div class="team-member mx-auto mb-3">
                             <img src="https://storage.googleapis.com/workspace-0f70711f-8b4e-4d94-86f1-2a93ccde5887/image/fdb0d81a-f746-4b20-ba20-b154aa69a35a.png"
-                                alt="Young female UX designer with glasses presenting wireframes on a tablet"
-                                class="img-fluid">
+                                alt="Smiling female software developer with short brown hair working at a laptop"
+                                class="img-fluid rounded-circle">
                         </div>
-                        <h4 class="card-title">Emily Rodriguez</h4>
-                        <p class="text-primary fw-bold">UX Designer</p>
-                        <p class="card-text">Creates intuitive interfaces for students and administrators.</p>
+                        <h4 class="card-title">ဒေါက်တာသန္တာထွေး</h4>
+                        <p class="text-primary fw-bold">ပါမောက္ခ - MIIT</p>
+                        <p class="card-text">Back End</p>
                     </div>
                 </div>
             </div>
-            <div class="col-md-6 col-lg-3">
+            <div class="col-md-4">
+                <div class="card text-center h-100 border-0">
+                    <div class="card-body">
+                        <div class="team-member mx-auto mb-3">
+                            <img src="{{asset('images/nwt.jpg')}}" }}"
+                                alt="Smiling female software developer with short brown hair working at a laptop"
+                                class="img-fluid rounded-circle">
+                        </div>
+                        <h4 class="card-title">ဒေါက်တာနိုင်ဝင်းထွန်း</h4>
+                        <p class="text-primary fw-bold">တွဲဖက်ပါမောက္ခ - TU(တောင်ငူ)</p>
+                        <p class="card-text">Full Stack, Database</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card text-center h-100 border-0">
+                    <div class="card-body">
+                        <div class="team-member mx-auto mb-3">
+                            <img src="https://storage.googleapis.com/workspace-0f70711f-8b4e-4d94-86f1-2a93ccde5887/image/fdb0d81a-f746-4b20-ba20-b154aa69a35a.png"
+                                alt="Professional male education consultant in a blue shirt reviewing documents"
+                                class="img-fluid rounded-circle">
+                        </div>
+                        <h4 class="card-title">‌ဒေါ်မေသူထွန်း</h4>
+                        <p class="text-primary fw-bold">ရုံးအုပ် - WYTU</p>
+                        <p class="card-text">Back End</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
                 <div class="card text-center h-100 border-0">
                     <div class="card-body">
                         <div class="team-member mx-auto mb-3">
                             <img src="https://storage.googleapis.com/workspace-0f70711f-8b4e-4d94-86f1-2a93ccde5887/image/994e5baf-07d5-4a5c-90bc-e2389842fe96.png"
-                                alt="Senior male IT security expert in a dark shirt working on computer security"
-                                class="img-fluid">
+                                alt="Young female UX designer with glasses presenting wireframes on a tablet"
+                                class="img-fluid rounded-circle">
                         </div>
-                        <h4 class="card-title">David Wilson</h4>
-                        <p class="text-primary fw-bold">Security Specialist</p>
-                        <p class="card-text">Implements and maintains our robust security protocols.</p>
+                        <h4 class="card-title">ဦးသန်းနိုင်မင်း</h4>
+                        <p class="text-primary fw-bold">အင်ဂျင်နီယာမှူး - TU(မကွေး)</p>
+                        <p class="card-text">Front End</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card text-center h-100 border-0">
+                    <div class="card-body">
+                        <div class="team-member mx-auto mb-3">
+                            <img src="https://storage.googleapis.com/workspace-0f70711f-8b4e-4d94-86f1-2a93ccde5887/image/fdb0d81a-f746-4b20-ba20-b154aa69a35a.png"
+                                alt="Professional male education consultant in a blue shirt reviewing documents"
+                                class="img-fluid rounded-circle">
+                        </div>
+                        <h4 class="card-title">‌ဒေါ်နန်းကုမ်ဆေး</h4>
+                        <p class="text-primary fw-bold">ရုံးအုပ် - TU(ပင်လုံ)</p>
+                        <p class="card-text">Front End</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card text-center h-100 border-0">
+                    <div class="card-body">
+                        <div class="team-member mx-auto mb-3">
+                            <img src="https://storage.googleapis.com/workspace-0f70711f-8b4e-4d94-86f1-2a93ccde5887/image/fdb0d81a-f746-4b20-ba20-b154aa69a35a.png"
+                                alt="Professional male education consultant in a blue shirt reviewing documents"
+                                class="img-fluid rounded-circle">
+                        </div>
+                        <h4 class="card-title">ဒေါ်ဝါဝါတင်</h4>
+                        <p class="text-primary fw-bold">ရုံးအုပ် - TU(ပင်လုံ)</p>
+                        <p class="card-text">Front End</p>
                     </div>
                 </div>
             </div>
@@ -160,7 +191,7 @@
     </section>
 
     <!-- Stats Section -->
-    <section class="bg-primary text-white py-5 mb-5">
+    {{-- <section class="bg-primary text-white py-5 mb-5">
         <div class="container">
             <div class="row text-center g-4">
                 <div class="col-md-3">
@@ -181,14 +212,14 @@
                 </div>
             </div>
         </div>
-    </section>
+    </section> --}}
 
 
     <!-- Call to Action -->
     <section class="bg-light py-5">
         <div class="container text-center">
-            <h2 class="mb-4">Ready to Transform Your Registration Process?</h2>
-            <p class="lead mb-4">Join dozens of educational institutions using our system today</p>
+            <h2 class="mb-4" style="font-size: 1.5em">သင်၏ Registration ပြုလုပ်မည့်စနစ်ကို ထိရောက်စွာ ပြောင်းလဲလိုက်ပါ။</h2>
+            
             <a href="{{route('index')}}" class="btn btn-primary btn-lg px-4 me-2">Get Started</a>
             <a href="{{route('contact')}}" class="btn btn-outline-primary btn-lg px-4">Contact Us</a>
         </div>

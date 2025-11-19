@@ -15,6 +15,6 @@ class TeacherAdmin
             return $next($request);
         }
         
-        return redirect()->route('admin.dashboard')->with('error', 'Access denied. Teacher Administrator only.');
+        return redirect()->route('admin.dashboard')->with('error', 'Access denied. Teacher admin only.');
     }
 }

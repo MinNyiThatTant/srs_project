@@ -1,163 +1,192 @@
-@extends('admin.master')
+{{-- resources/views/admin/global/dashboard.blade.php --}}
+@extends('admin.layouts.master')
+
+@section('title', 'Global Admin Dashboard')
 
 @section('content')
-    {{-- @vite(['resources/sass/app.scss', 'resources/js/app.js']) --}}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2">Dashboard Overview</h1>
+</div>
 
-    {{-- <div class="col-12 col-md-6 order-md-2 order-first"> --}}
-        {{-- <nav aria-label="breadcrumb" class="breadcrumb-header float-start float-lg-end"> --}}
-            <ol class="breadcrumb">
-                <li class="nav-item dropdown">
-                    <a class="nav-link dropdown-toggle" href="#!" id="accountDropdown" role="button"
-                        data-bs-toggle="dropdown" aria-expanded="false">Hello, {{ Auth::guard('admin')->user()->name }}</a>
-                    <ul class="dropdown-menu border-0 shadow bsb-zoomIn" aria-labelledby="accountDropdown">
-                        <li>
-                            <a class="dropdown-item" href="{{ route('admin.logout') }}">Logout</a>
-                        </li>
-                    </ul>
-                </li>
-                {{-- <li class="breadcrumb-item"><a href="#">Admin</a></li> --}}
-                {{-- <li class="breadcrumb-item active" aria-current="page">Teacher</li> --}}
-            </ol>
-        {{-- </nav> --}}
-    {{-- </div> --}}
-
-    <div class="row">
-        <!-- Students Panel -->
-        <div class="col-xs-12 col-md-6 col-lg-4 mb-4">
-            <div class="card text-white bg-primary mb-3 course-card">
-                <div class="card-header">Students</div>
-                <img src="{{ asset('images/stu.jpg') }}" class="card-img-top" alt="Students"
-                    style="height: 200px; object-fit: cover;">
-                <div class="card-body">
-                    <h5 class="card-title">120</h5>
-                    <p class="card-text">Total Students Registered</p>
-                </div>
-            </div>
-        </div>
-
-        <!-- Comments Panel -->
-        <div class="col-xs-12 col-md-6 col-lg-4 mb-4">
-            <div class="card text-white bg-warning mb-3 course-card">
-                <div class="card-header">Comments</div>
-                <img src="{{ asset('images/comment.jpg') }}" class="card-img-top" alt="Comments"
-                    style="height: 200px; object-fit: cover;">
-                <div class="card-body">
-                    <h5 class="card-title">52</h5>
-                    <p class="card-text">Total Comments Received</p>
-                </div>
-            </div>
-        </div>
-
-        <!-- Active Students Panel -->
-        <div class="col-xs-12 col-md-6 col-lg-4 mb-4">
-            <div class="card text-white bg-success mb-3 course-card">
-                <div class="card-header">Active Students</div>
-                <img src="{{ asset('images/act-stu.jpg') }}" class="card-img-top" alt="Active Students"
-                    style="height: 200px; object-fit: cover;">
-                <div class="card-body">
-                    <h5 class="card-title">24</h5>
-                    <p class="card-text">Currently Active Students</p>
-                </div>
-            </div>
-        </div>
-
-        <!-- Views Panel -->
-        <div class="col-xs-12 col-md-6 col-lg-4 mb-4">
-            <div class="card text-white bg-danger mb-3 course-card">
-                <div class="card-header">Views</div>
-                <img src="{{ asset('images/view.jpg') }}" class="card-img-top" alt="Views"
-                    style="height: 200px; object-fit: cover;">
-                <div class="card-body">
-                    <h5 class="card-title">25.2k</h5>
-                    <p class="card-text">Total Page Views</p>
-                </div>
-            </div>
-        </div>
-
-        <!-- Total Courses Panel -->
-        <div class="col-xs-12 col-md-6 col-lg-4 mb-4">
-            <div class="card text-white bg-info mb-3 course-card">
-                <div class="card-header">Total Courses</div>
-                <img src="{{ asset('images/tot-course.jpg') }}" class="card-img-top" alt="Courses"
-                    style="height: 200px; object-fit: cover;">
-                <div class="card-body">
-                    <h5 class="card-title">30</h5>
-                    <p class="card-text">Courses Available</p>
-                </div>
-            </div>
-        </div>
-
-        <!-- Total Instructors Panel -->
-        <div class="col-xs-12 col-md-6 col-lg-4 mb-4">
-            <div class="card text-white bg-secondary mb-3 course-card">
-                <div class="card-header">Total Teacher</div>
-                <img src="{{ asset('images/teacher.jpg') }}" class="card-img-top" alt="Instructors"
-                    style="height: 200px; object-fit: cover;">
-                <div class="card-body">
-                    <h5 class="card-title">15</h5>
-                    <p class="card-text">Teachers</p>
-                </div>
-            </div>
-        </div>
-
-        <!-- Recent Activity Section -->
-        <div class="row">
-            <div class="col-lg-12">
-                <div class="card border-0 shadow-sm">
-                    <div class="card-header bg-white py-3">
-                        <h5 class="m-0 font-weight-bold">Recent Student Registrations</h5>
+<!-- Statistics Cards -->
+<div class="row">
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card border-left-primary shadow h-100 py-2">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                            Total Applications</div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">{{ $stats['total_applications'] }}</div>
                     </div>
-                    <div class="card-body">
-                        <div class="table-responsive">
-                            <table class="table table-hover">
-                                <thead>
-                                    <tr>
-                                        <th>Student ID</th>
-                                        <th>Name</th>
-                                        <th>Program</th>
-                                        <th>Date Registered</th>
-                                        <th>Payment Status</th>
-                                        <th>Action</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <tr>
-                                        <td>ST2023-0124</td>
-                                        <td>John Smith</td>
-                                        <td>Computer Science</td>
-                                        <td>May 15, 2023</td>
-                                        <td><span class="status-badge bg-success text-white">Paid</span></td>
-                                        <td><button class="btn btn-sm btn-primary">View</button></td>
-                                    </tr>
-                                    <tr>
-                                        <td>ST2023-0125</td>
-                                        <td>Sarah Johnson</td>
-                                        <td>Business Admin</td>
-                                        <td>May 16, 2023</td>
-                                        <td><span class="status-badge bg-warning text-dark">Pending</span></td>
-                                        <td><button class="btn btn-sm btn-primary">View</button></td>
-                                    </tr>
-                                    <tr>
-                                        <td>ST2023-0126</td>
-                                        <td>Michael Chen</td>
-                                        <td>Electrical Eng</td>
-                                        <td>May 17, 2023</td>
-                                        <td><span class="status-badge bg-danger text-white">Overdue</span></td>
-                                        <td><button class="btn btn-sm btn-primary">View</button></td>
-                                    </tr>
-                                    <tr>
-                                        <td>ST2023-0127</td>
-                                        <td>Emily Wilson</td>
-                                        <td>Data Science</td>
-                                        <td>May 18, 2023</td>
-                                        <td><span class="status-badge bg-success text-white">Paid</span></td>
-                                        <td><button class="btn btn-sm btn-primary">View</button></td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                        </div>
+                    <div class="col-auto">
+                        <i class="bi bi-files fa-2x text-gray-300"></i>
                     </div>
                 </div>
             </div>
         </div>
-    @endsection
+    </div>
+
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card border-left-warning shadow h-100 py-2">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                            Payment Pending</div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">{{ $stats['payment_pending'] }}</div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="bi bi-clock fa-2x text-gray-300"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card border-left-success shadow h-100 py-2">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                            Approved Applications</div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">{{ $stats['approved_applications'] }}</div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="bi bi-check-circle fa-2x text-gray-300"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card border-left-info shadow h-100 py-2">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                            Completed Payments</div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">{{ $stats['completed_payments'] }}</div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="bi bi-credit-card fa-2x text-gray-300"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <!-- Recent Applications -->
+    <div class="col-lg-8">
+        <div class="card shadow mb-4">
+            <div class="card-header py-3 d-flex justify-content-between align-items-center">
+                <h6 class="m-0 font-weight-bold text-primary">Recent Applications</h6>
+                <a href="{{ route('admin.global.applications') }}" class="btn btn-sm btn-primary">View All</a>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-bordered table-hover">
+                        <thead>
+                            <tr>
+                                <th>Application ID</th>
+                                <th>Name</th>
+                                <th>Department</th>
+                                <th>Type</th>
+                                <th>Status</th>
+                                <th>Payment</th>
+                                <th>Date</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach($recentApplications as $application)
+                            <tr>
+                                <td>
+                                    <a href="{{ route('admin.global.applications.view', $application->id) }}">
+                                        {{ $application->application_id }}
+                                    </a>
+                                </td>
+                                <td>{{ $application->name }}</td>
+                                <td>{{ $application->department }}</td>
+                                <td>
+                                    <span class="badge bg-{{ $application->application_type === 'new' ? 'info' : 'warning' }}">
+                                        {{ ucfirst($application->application_type) }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <span class="badge {{ $application->status_badge }}">
+                                        {{ $application->status_text }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <span class="badge {{ $application->payment_status_badge }}">
+                                        {{ $application->payment_status_text }}
+                                    </span>
+                                </td>
+                                <td>{{ $application->created_at->format('M d, Y') }}</td>
+                            </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="col-lg-4">
+        <div class="card shadow mb-4">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-primary">Quick Actions</h6>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    <a href="{{ route('admin.global.applications', ['status' => 'payment_pending']) }}" 
+                       class="btn btn-warning btn-block">
+                        <i class="bi bi-credit-card me-2"></i>Verify Payments
+                        <span class="badge bg-danger">{{ $stats['payment_pending'] }}</span>
+                    </a>
+                    <a href="{{ route('admin.global.applications', ['status' => 'payment_verified']) }}" 
+                       class="btn btn-info btn-block">
+                        <i class="bi bi-check-circle me-2"></i>Academic Review
+                        <span class="badge bg-danger">{{ $stats['payment_verified'] }}</span>
+                    </a>
+                    <a href="{{ route('admin.global.applications', ['status' => 'academic_approved']) }}" 
+                       class="btn btn-success btn-block">
+                        <i class="bi bi-award me-2"></i>Final Approval
+                        <span class="badge bg-danger">{{ $stats['academic_approved'] }}</span>
+                    </a>
+                    <a href="{{ route('admin.global.payments', ['status' => 'pending']) }}" 
+                       class="btn btn-secondary btn-block">
+                        <i class="bi bi-clock-history me-2"></i>Pending Payments
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Payments -->
+        <div class="card shadow">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-primary">Recent Payments</h6>
+            </div>
+            <div class="card-body">
+                @foreach($recentPayments as $payment)
+                <div class="d-flex justify-content-between align-items-center mb-2 p-2 border rounded">
+                    <div>
+                        <small class="text-muted">{{ $payment->application->name ?? 'N/A' }}</small>
+                        <br>
+                        <strong>{{ $payment->transaction_id }}</strong>
+                    </div>
+                    <span class="badge bg-{{ $payment->status === 'completed' ? 'success' : 'warning' }}">
+                        {{ ucfirst($payment->status) }}
+                    </span>
+                </div>
+                @endforeach
+            </div>
+        </div>
+    </div>
+</div>
+@endsection

@@ -15,6 +15,6 @@ class HsaAdmin
             return $next($request);
         }
         
-        return redirect()->route('admin.dashboard')->with('error', 'Access denied. Head of Staff Affairs only.');
+        return redirect()->route('admin.dashboard')->with('error', 'Access denied. HSA admin only.');
     }
 }

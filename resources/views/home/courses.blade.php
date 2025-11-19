@@ -1,5 +1,9 @@
-@extends('master')
+@extends('layouts.master')
+
+@section('title', 'West Yangon Technological University - Home')
+
 @section('content')
+
     <style>
         .hero-section {
             color: white;
@@ -226,7 +230,7 @@
     <section class="bg-light py-5 mt-5">
         <div class="container text-center">
             <h2 class="font-weight-bold mb-4">Interested in Our Engineering Programs?</h2>
-            <p class="lead mb-4">Explore our admission requirements and application process</p>
+            
             <a href="{{route('index')}}" class="btn btn-primary btn-lg">Admission Information</a>
         </div>
     </section>

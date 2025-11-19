@@ -3,14 +3,14 @@
    <head>
       <meta charset="utf-8">
       <meta name="viewport" content="width=device-width, initial-scale=1">
-      <title>Laravel 11 Multi Auth</title>
+      <title>Student Registration System - SRS</title>
       <link rel="stylesheet" href="https://unpkg.com/bootstrap@5.3.2/dist/css/bootstrap.min.css">
    </head>
    <body class="bg-light">
         <nav class="navbar navbar-expand-md bg-white shadow-lg bsb-navbar bsb-navbar-hover bsb-navbar-caret">
             <div class="container">
                 <a class="navbar-brand" href="#">
-                   <strong>Laravel 11 Multi Auth</strong>
+                   <strong>Welcome, Student from SRS</strong>
                 </a>
                 <button class="navbar-toggler border-0" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasNavbar" aria-controls="offcanvasNavbar">
                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" class="bi bi-list" viewBox="0 0 16 16">
@@ -41,10 +41,10 @@
         <div class="container">
            <div class="card border-0 shadow my-5">
                 <div class="card-header bg-light">
-                    <h3 class="h5 pt-2">Dashboard</h3>
+                    <h3 class="h5 pt-2">Student Dashboard</h3>
                 </div>
                 <div class="card-body">
-                    You are logged in !!
+                   Hello, student, You are logged in to SRS. 
                 </div>
            </div>
         </div>

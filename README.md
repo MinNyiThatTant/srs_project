@@ -16,7 +16,34 @@ php artisan route:clear
 php artisan view:clear
 php artisan session:clear
 php artisan optimize:clear
+composer dump-autoload
 
+
+__________________________
+http://localhost/srs_project/public/admin/finance-applications
+http://localhost/srs_project/public/admin/fa
+http://localhost/srs_project/public/admin/pending-payments
+
+
+
+
+
+
+
+
+//roles account sample data
+
+INSERT INTO `users` (`id`, `name`, `email`, `password`, `role`, `department_id`, `email_verified_at`, `created_at`, `updated_at`) VALUES (3, 'Global Administrator', 'global.admin@wytu.edu.mm', '$2y$12$bYBKQoJSewCbRnBaabqSJO3l3iYIeWoYVE9Cz4FlCJdA1gZ85aPU.', 'global_admin', NULL, NOW(), NOW(), NOW());
+INSERT INTO `users` (`id`, `name`, `email`, `password`, `role`, `department_id`, `email_verified_at`, `created_at`, `updated_at`) VALUES (4, 'CS HOD Admin', 'cs.hod@wytu.edu.mm', '$2y$12$bYBKQoJSewCbRnBaabqSJO3l3iYIeWoYVE9Cz4FlCJdA1gZ85aPU.', 'hod_admin', 1, NOW(), NOW(), NOW());
+INSERT INTO `users` (`id`, `name`, `email`, `password`, `role`, `department_id`, `email_verified_at`, `created_at`, `updated_at`) VALUES (5, 'EE HOD Admin', 'ee.hod@wytu.edu.mm', '$2y$12$bYBKQoJSewCbRnBaabqSJO3l3iYIeWoYVE9Cz4FlCJdA1gZ85aPU.', 'hod_admin', 2, NOW(), NOW(), NOW());
+INSERT INTO `users` (`id`, `name`, `email`, `password`, `role`, `department_id`, `email_verified_at`, `created_at`, `updated_at`) VALUES (6, 'ME HOD Admin', 'me.hod@wytu.edu.mm', '$2y$12$bYBKQoJSewCbRnBaabqSJO3l3iYIeWoYVE9Cz4FlCJdA1gZ85aPU.', 'hod_admin', 3, NOW(), NOW(), NOW());
+INSERT INTO `users` (`id`, `name`, `email`, `password`, `role`, `department_id`, `email_verified_at`, `created_at`, `updated_at`) VALUES (7, 'HAA Administrator', 'haa.admin@wytu.edu.mm', '$2y$12$bYBKQoJSewCbRnBaabqSJO3l3iYIeWoYVE9Cz4FlCJdA1gZ85aPU.', 'haa_admin', NULL, NOW(), NOW(), NOW());
+INSERT INTO `users` (`id`, `name`, `email`, `password`, `role`, `department_id`, `email_verified_at`, `created_at`, `updated_at`) VALUES (8, 'HSA Administrator', 'hsa.admin@wytu.edu.mm', '$2y$12$bYBKQoJSewCbRnBaabqSJO3l3iYIeWoYVE9Cz4FlCJdA1gZ85aPU.', 'hsa_admin', NULL, NOW(), NOW(), NOW());
+INSERT INTO `users` (`id`, `name`, `email`, `password`, `role`, `department_id`, `email_verified_at`, `created_at`, `updated_at`) VALUES (9, 'Teacher Administrator', 'teacher.admin@wytu.edu.mm', '$2y$12$bYBKQoJSewCbRnBaabqSJO3l3iYIeWoYVE9Cz4FlCJdA1gZ85aPU.', 'teacher_admin', 1, NOW(), NOW(), NOW());
+INSERT INTO `users` (`id`, `name`, `email`, `password`, `role`, `department_id`, `email_verified_at`, `created_at`, `updated_at`) VALUES (10, 'Finance Administrator', 'fa.admin@wytu.edu.mm', '$2y$12$bYBKQoJSewCbRnBaabqSJO3l3iYIeWoYVE9Cz4FlCJdA1gZ85aPU.', 'fa_admin', NULL, NOW(), NOW(), NOW());
+__________________________
+
+php artisan db:seed --class=UsersTableSeeder
 
 //builtin auth
 composer require laravel/ui
@@ -27,6 +54,20 @@ npm install && npm run dev
 composer require --dev barryvdh/laravel-ide-helper
 php artisan ide-helper:generate
 
+```
+
+
+```bash
+php artisan make:migration create_departments_table
+php artisan make:migration create_users_table
+php artisan make:migration create_semesters_table
+php artisan make:migration create_academic_years_table
+php artisan make:migration create_teachers_table
+php artisan make:migration create_courses_table
+php artisan make:migration create_students_table
+php artisan make:migration create_class_schedules_table
+php artisan make:migration create_registrations_table
+php artisan make:migration create_finances_table
 ```
 ______________________________________________________________________________________________________________
 ## 🧑‍🎓Student Registration System(SRS) created by <span style="color: blue;">E-service-Group(1/2025)</span>

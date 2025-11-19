@@ -15,6 +15,6 @@ class FaAdmin
             return $next($request);
         }
         
-        return redirect()->route('admin.dashboard')->with('error', 'Access denied. Finance Administrator only.');
+        return redirect()->route('admin.dashboard')->with('error', 'Access denied. Finance admin only.');
     }
 }

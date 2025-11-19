@@ -1,4 +1,7 @@
-@extends('master')
+@extends('layouts.master')
+
+@section('title', 'West Yangon Technological University - Home')
+
 @section('content')
 
 <!-- content -->
