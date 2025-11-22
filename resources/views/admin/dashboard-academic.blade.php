@@ -93,7 +93,7 @@
         <div class="card">
             <div class="card-header">
                 <h4>Applications Pending Academic Review</h4>
-                <a href="{{ route('admin.academic.applications') }}" class="btn btn-primary btn-sm">View All Applications</a>
+                <a href="{{ route('admin.applications.academic') }}" class="btn btn-primary btn-sm">View All Applications</a>
             </div>
             <div class="card-body">
                 @if($stats['recent_applications']->count() > 0)
@@ -125,14 +125,14 @@
                                 <td>{{ $application->created_at->format('M d, Y') }}</td>
                                 <td>
                                     <div class="btn-group">
-                                        <a href="{{ route('admin.academic.application.view', $application->id) }}" 
+                                        <a href="{{ route('admin.applications.view', $application->id) }}" 
                                            class="btn btn-sm btn-outline-primary">
                                             <i class="bi bi-eye"></i> View
                                         </a>
-                                        <form action="{{ route('admin.academic.approve-application', ['id' => $application->id]) }}" method="POST" class="d-inline">
+                                        <form action="{{ route('admin.applications.academic-approve', $application->id) }}" method="POST" class="d-inline">
                                             @csrf
                                             <button type="submit" class="btn btn-sm btn-outline-success" 
-                                                    onclick="return confirm('Approve this application and generate student credentials?')">
+                                                    onclick="return confirm('Approve this application?')">
                                                 <i class="bi bi-check"></i> Approve
                                             </button>
                                         </form>
@@ -151,7 +151,7 @@
                                                     <h5 class="modal-title">Reject Application</h5>
                                                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                                                 </div>
-                                                <form action="{{ route('admin.academic.reject-application', ['id' => $application->id]) }}" method="POST">
+                                                <form action="{{ route('admin.applications.academic-reject', $application->id) }}" method="POST">
                                                     @csrf
                                                     <div class="modal-body">
                                                         <div class="mb-3">

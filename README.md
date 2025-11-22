@@ -25,6 +25,8 @@ php artisan route:list --name=applications
 
 php artisan route:list --name=hod
 php artisan route:list | findstr "hsa"
+php artisan route:list | grep academic
+php artisan route:list | findstr academic
 --------------------------------
 __________________________
 http://localhost/srs_project/public/admin/finance-applications

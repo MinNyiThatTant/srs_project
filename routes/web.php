@@ -162,14 +162,15 @@ Route::middleware(['auth:admin'])->prefix('admin')->name('admin.')->group(functi
     Route::get('payments/export', [App\Http\Controllers\Admin\PaymentController::class, 'export'])->name('payments.export');
 
     // ========== ACADEMIC ADMIN ROUTES ==========
-    Route::get('academic-dashboard', [HaaController::class, 'dashboard'])->name('academic.dashboard');
-    Route::get('applications/academic', [HaaController::class, 'academicApplications'])->name('applications.academic');
-    Route::post('academic-approve/{id}', [HaaController::class, 'academicApprove'])->name('applications.academic-approve');
-    Route::post('academic-reject/{id}', [HaaController::class, 'academicReject'])->name('applications.academic-reject');
-    Route::get('haa', [HaaController::class, 'dashboard'])->name('haa');
-    Route::get('academic-affairs', [HaaController::class, 'academicAffairs'])->name('academic-affairs');
-    Route::get('course-management', [HaaController::class, 'courseManagement'])->name('course.management');
-    Route::post('approve-academic/{id}', [HaaController::class, 'approveAcademic'])->name('approve.academic');
+Route::get('academic-dashboard', [HaaController::class, 'dashboard'])->name('academic.dashboard');
+Route::get('applications/academic', [HaaController::class, 'academicApplications'])->name('applications.academic');
+Route::post('academic-approve/{id}', [HaaController::class, 'academicApprove'])->name('applications.academic-approve');
+Route::post('academic-reject/{id}', [HaaController::class, 'academicReject'])->name('applications.academic-reject');
+Route::get('haa', [HaaController::class, 'dashboard'])->name('haa');
+Route::get('academic-affairs', [HaaController::class, 'academicAffairs'])->name('academic-affairs');
+Route::get('course-management', [HaaController::class, 'courseManagement'])->name('course.management');
+Route::post('approve-academic/{id}', [HaaController::class, 'approveAcademic'])->name('approve.academic');
+Route::get('application/view/{id}', [HaaController::class, 'viewApplication'])->name('applications.view');
 
     // ========== HOD ADMIN ROUTES ==========
     // Route::prefix('admin')->group(function () {
@@ -319,25 +320,40 @@ Route::get('/check-payment-config', function () {
 
 
 //////////////////////////////////////////////////////////////////////////////////////////////
-// Debug route - add this temporarily
-Route::get('/check-hod-routes', function () {
-    echo "Checking HOD routes...<br><br>";
+// Temporary debug route - Add this at the bottom of your web.php
+Route::get('/debug-academic-routes', function() {
+    $academicRoutes = collect(\Route::getRoutes()->getRoutes())
+        ->filter(function($route) {
+            return str_contains($route->uri, 'academic') || 
+                   str_contains($route->uri, 'admin') ||
+                   (method_exists($route, 'getName') && $route->getName() && str_contains($route->getName(), 'academic'));
+        })
+        ->map(function($route) {
+            return [
+                'name' => $route->getName(),
+                'uri' => $route->uri,
+                'action' => $route->getActionName(),
+            ];
+        });
+    
+    return response()->json($academicRoutes->values());
+});
+/////////////////////////////////////////////////////////////////////////////////////////////
 
-    $routes = [
-        'hod.dashboard',
-        'applications.hod',
-        'hod.staff.index',
-        'hod.staff.store',
-        'hod.staff.update',
-        'hod.staff.destroy'
-    ];
 
-    foreach ($routes as $routeName) {
-        if (Route::has($routeName)) {
-            echo "✓ Route '$routeName' EXISTS<br>";
-        } else {
-            echo "✗ Route '$routeName' NOT FOUND<br>";
-        }
+
+
+
+/////////////////////////////////////////////////////////////////////////////////////////////
+// Test route to check if admin.academic.dashboard exists
+http://localhost:8000/test-admin-academic-route
+Route::get('/test-admin-academic-route', function() {
+    try {
+        $url = route('admin.academic.dashboard');
+        return "SUCCESS: Route exists! URL: " . $url;
+    } catch (\Exception $e) {
+        return "ERROR: " . $e->getMessage();
     }
 });
+
 /////////////////////////////////////////////////////////////////////////////////////////////

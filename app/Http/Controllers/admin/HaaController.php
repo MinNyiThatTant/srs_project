@@ -32,7 +32,9 @@ class HaaController extends Controller
                 ->count(),
             'total_reviewed' => Application::whereIn('status', ['academic_approved', 'academic_rejected'])
                 ->count(),
+            'total_students' => Application::where('status', 'academic_approved')->count(),
             'recent_applications' => Application::where('status', 'payment_verified')
+                ->where('payment_status', 'verified')
                 ->orderBy('created_at', 'desc')
                 ->limit(10)
                 ->get()
@@ -73,7 +75,7 @@ class HaaController extends Controller
         return redirect()->back()->with('success', 'Application academically approved');
     }
 
-    public function academicReject($id)
+    public function academicReject(Request $request, $id)
     {
         $admin = Auth::guard('admin')->user();
         
@@ -83,7 +85,8 @@ class HaaController extends Controller
 
         $application = Application::findOrFail($id);
         $application->update([
-            'status' => 'academic_rejected'
+            'status' => 'academic_rejected',
+            'rejection_notes' => $request->notes
         ]);
 
         return redirect()->back()->with('success', 'Application academically rejected');
@@ -125,5 +128,17 @@ class HaaController extends Controller
         ]);
 
         return redirect()->back()->with('success', 'Application academically approved');
+    }
+
+    public function viewApplication($id)
+    {
+        $admin = Auth::guard('admin')->user();
+        
+        if ($admin->role !== 'haa_admin') {
+            abort(403, 'Access denied. Academic admin only.');
+        }
+
+        $application = Application::findOrFail($id);
+        return view('admin.applications.view', compact('application'));
     }
 }

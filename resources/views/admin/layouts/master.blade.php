@@ -118,8 +118,8 @@
 
                                     @if (auth()->guard('admin')->user()->role === 'haa_admin')
                                         <li
-                                            class="submenu-item {{ request()->routeIs('admin.academic.applications') ? 'active' : '' }}">
-                                            <a href="{{ route('admin.academic.applications') }}">Academic Review</a>
+                                            class="submenu-item {{ request()->routeIs('admin.applications.academic') ? 'active' : '' }}">
+                                            <a href="{{ route('admin.applications.academic') }}">Academic Review</a>
                                         </li>
                                     @endif
 
