@@ -172,30 +172,20 @@ Route::get('course-management', [HaaController::class, 'courseManagement'])->nam
 Route::post('approve-academic/{id}', [HaaController::class, 'approveAcademic'])->name('approve.academic');
 Route::get('application/view/{id}', [HaaController::class, 'viewApplication'])->name('applications.view');
 
-    // ========== HOD ADMIN ROUTES ==========
-    // Route::prefix('admin')->group(function () {
-    // Route::get('hod-dashboard', [HodController::class, 'dashboard'])->name('hod.dashboard');
-    // Route::get('hod', [HodController::class, 'dashboard'])->name('hod');
-    // HOD Dashboard
-    Route::get('hod-dashboard', [HodController::class, 'dashboard'])->name('hod.dashboard');
-    Route::get('hod', [HodController::class, 'dashboard'])->name('hod');
+    // HOD Routes
+Route::get('hod-dashboard', [HodController::class, 'dashboard'])->name('hod.dashboard');
+Route::get('hod', [HodController::class, 'dashboard'])->name('hod');
+Route::get('applications/hod', [HodController::class, 'hodApplications'])->name('applications.hod');
+Route::post('final-approve/{id}', [HodController::class, 'finalApprove'])->name('applications.final-approve');
+Route::post('approve-final/{id}', [HodController::class, 'approveFinal'])->name('approve.final');
+Route::get('my-department', [HodController::class, 'myDepartment'])->name('my-department');
+Route::get('department-applications', [HodController::class, 'departmentApplications'])->name('department.applications');
 
-    // HOD Applications
-    Route::get('applications/hod', [HodController::class, 'hodApplications'])->name('applications.hod');
-    Route::post('final-approve/{id}', [HodController::class, 'finalApprove'])->name('applications.final-approve');
-    Route::post('approve-final/{id}', [HodController::class, 'approveFinal'])->name('approve.final');
-
-    // Department Management
-    Route::get('my-department', [HodController::class, 'myDepartment'])->name('my-department');
-    Route::get('department-applications', [HodController::class, 'departmentApplications'])->name('department.applications');
-
-    // Staff Management - ADD THESE EXACT ROUTES
-    Route::get('hod/staff', [HodController::class, 'staffIndex'])->name('hod.staff.index');
-    Route::post('hod/staff', [HodController::class, 'staffStore'])->name('hod.staff.store');
-    Route::put('hod/staff/{id}', [HodController::class, 'staffUpdate'])->name('hod.staff.update');
-    Route::delete('hod/staff/{id}', [HodController::class, 'staffDestroy'])->name('hod.staff.destroy');
-    // );
-
+// Staff Management Routes
+Route::get('hod/staff', [HodController::class, 'staffIndex'])->name('hod.staff.index');
+Route::post('hod/staff', [HodController::class, 'staffStore'])->name('hod.staff.store');
+Route::put('hod/staff/{id}', [HodController::class, 'staffUpdate'])->name('hod.staff.update');
+Route::delete('hod/staff/{id}', [HodController::class, 'staffDestroy'])->name('hod.staff.destroy');
     // ========== HSA ADMIN ROUTES ==========
     Route::get('hsa-dashboard', [HsaController::class, 'dashboard'])->name('hsa.dashboard');
     Route::get('hsa', [HsaController::class, 'dashboard'])->name('hsa');
@@ -357,3 +347,52 @@ Route::get('/test-admin-academic-route', function() {
 });
 
 /////////////////////////////////////////////////////////////////////////////////////////////
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// // ========== HOD ADMIN ROUTES ==========
+//     // Route::prefix('admin')->group(function () {
+//     // Route::get('hod-dashboard', [HodController::class, 'dashboard'])->name('hod.dashboard');
+//     // Route::get('hod', [HodController::class, 'dashboard'])->name('hod');
+//     // HOD Dashboard
+//     Route::get('hod-dashboard', [HodController::class, 'dashboard'])->name('hod.dashboard');
+//     Route::get('hod', [HodController::class, 'dashboard'])->name('hod');
+
+//     // HOD Applications
+//     Route::get('applications/hod', [HodController::class, 'hodApplications'])->name('applications.hod');
+//     Route::post('final-approve/{id}', [HodController::class, 'finalApprove'])->name('applications.final-approve');
+//     Route::post('approve-final/{id}', [HodController::class, 'approveFinal'])->name('approve.final');
+
+//     // Department Management
+//     Route::get('my-department', [HodController::class, 'myDepartment'])->name('my-department');
+//     Route::get('department-applications', [HodController::class, 'departmentApplications'])->name('department.applications');
+
+//     // Staff Management - ADD THESE EXACT ROUTES
+//     Route::get('hod/staff', [HodController::class, 'staffIndex'])->name('hod.staff.index');
+//     Route::post('hod/staff', [HodController::class, 'staffStore'])->name('hod.staff.store');
+//     Route::put('hod/staff/{id}', [HodController::class, 'staffUpdate'])->name('hod.staff.update');
+//     Route::delete('hod/staff/{id}', [HodController::class, 'staffDestroy'])->name('hod.staff.destroy');
+//     // );

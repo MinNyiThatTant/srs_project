@@ -8,20 +8,18 @@ return new class extends Migration
 {
     public function up()
     {
-        Schema::create('departments', function (Blueprint $table) {
+        Schema::create('staff', function (Blueprint $table) {
             $table->id();
             $table->string('name');
-            $table->string('code')->unique();
-            $table->text('description')->nullable();
+            $table->string('email')->unique();
+            $table->string('position');
+            $table->string('department');
             $table->timestamps();
         });
-
-        // REMOVE the DB insert statements - let the seeder handle this
-        // The seeder will insert the departments with the correct codes
     }
 
     public function down()
     {
-        Schema::dropIfExists('departments');
+        Schema::dropIfExists('staff');
     }
 };

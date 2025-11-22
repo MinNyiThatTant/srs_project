@@ -22,6 +22,11 @@ composer dump-autoload
 php artisan make:migration add_is_active_to_admins_table --table=admins
 php artisan migrate
 php artisan route:list --name=applications
+php artisan db:seed --class=AdminSeeder
+php artisan migrate:fresh --seed
+php artisan make:seeder DepartmentSeeder
+findstr /s "departments" database\*.php
+php artisan make:model Staff -m
 
 php artisan route:list --name=hod
 php artisan route:list | findstr "hsa"

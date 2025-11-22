@@ -195,8 +195,7 @@ class ApplicationApprovalController extends Controller
             'Biotechnology' => 'BIO',
             'Textile Engineering' => 'TE',
             'Mechanical Engineering' => 'ME',
-            'Chemical Engineering' => 'CHE',
-            'Computer Engineering and Information Technology' => 'CEIT'
+            'Chemical Engineering' => 'CHE'
         ];
 
         return $codes[$department] ?? 'GEN';

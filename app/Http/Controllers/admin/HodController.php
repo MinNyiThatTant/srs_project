@@ -4,7 +4,7 @@ namespace App\Http\Controllers\admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Application;
-use App\Models\Admin;
+use App\Models\Staff;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -13,35 +13,37 @@ class HodController extends Controller
     public function dashboard()
     {
         $admin = Auth::guard('admin')->user();
-        $department = $admin->department;
-
+        
         if ($admin->role !== 'hod_admin') {
-            abort(403, 'Access denied. HOD admin only.');
+            abort(403, 'Access denied. HOD only.');
         }
+        
+        $stats = $this->getDashboardStats($admin->department);
+        return view('admin.dashboard-hod', compact('stats'));
+    }
 
+    private function getDashboardStats($department)
+    {
         $stats = [
-            'department_applications' => Application::where('department', $department)->count(),
-            'pending_applications' => Application::where('department', $department)
-                ->where('status', 'pending')
-                ->count(),
-            'approved_applications' => Application::where('department', $department)
-                ->where('status', 'approved')
-                ->count(),
-            'department_staff' => Admin::where('department', $department)
-                ->where('role', '!=', 'hod_admin')
-                ->count(),
-            'active_staff' => Admin::where('department', $department)
-                ->where('role', '!=', 'hod_admin')
-                ->count(), // Removed is_active condition
-            'department_courses' => 0,
-            'pending_applications_list' => Application::where('department', $department)
+            'pending_reviews' => Application::where('department', $department)
                 ->where('status', 'academic_approved')
-                ->latest()
-                ->take(5)
+                ->count(),
+            'approved_today' => Application::where('department', $department)
+                ->where('status', 'final_approved')
+                ->whereDate('updated_at', today())
+                ->count(),
+            'total_approved' => Application::where('department', $department)
+                ->where('status', 'final_approved')
+                ->count(),
+            'total_applications' => Application::where('department', $department)->count(),
+            'recent_applications' => Application::where('department', $department)
+                ->where('status', 'academic_approved')
+                ->orderBy('created_at', 'desc')
+                ->limit(10)
                 ->get()
         ];
 
-        return view('admin.dashboard-hod', compact('stats'));
+        return $stats;
     }
 
     public function hodApplications()
@@ -49,7 +51,7 @@ class HodController extends Controller
         $admin = Auth::guard('admin')->user();
         
         if ($admin->role !== 'hod_admin') {
-            abort(403, 'Access denied. HOD admin only.');
+            abort(403, 'Access denied. HOD only.');
         }
 
         $applications = Application::where('department', $admin->department)
@@ -57,7 +59,7 @@ class HodController extends Controller
             ->orderBy('created_at', 'desc')
             ->paginate(20);
 
-        return view('admin.applications.hod', compact('applications'));
+        return view('admin.applications.hod', compact('applications', 'admin'));
     }
 
     public function finalApprove($id)
@@ -65,18 +67,39 @@ class HodController extends Controller
         $admin = Auth::guard('admin')->user();
         
         if ($admin->role !== 'hod_admin') {
-            abort(403, 'Access denied. HOD admin only.');
+            abort(403, 'Access denied. HOD only.');
         }
 
         $application = Application::findOrFail($id);
         
         // Check if application belongs to HOD's department
         if ($application->department !== $admin->department) {
-            abort(403, 'Access denied. Application not in your department.');
+            abort(403, 'Access denied. You can only approve applications from your department.');
         }
 
         $application->update([
-            'status' => 'approved'
+            'status' => 'final_approved'
+        ]);
+
+        return redirect()->back()->with('success', 'Application finally approved');
+    }
+
+    public function approveFinal($id)
+    {
+        $admin = Auth::guard('admin')->user();
+        
+        if ($admin->role !== 'hod_admin') {
+            abort(403, 'Access denied. HOD only.');
+        }
+
+        $application = Application::findOrFail($id);
+        
+        if ($application->department !== $admin->department) {
+            abort(403, 'Access denied. You can only approve applications from your department.');
+        }
+
+        $application->update([
+            'status' => 'final_approved'
         ]);
 
         return redirect()->back()->with('success', 'Application finally approved');
@@ -87,21 +110,20 @@ class HodController extends Controller
         $admin = Auth::guard('admin')->user();
         
         if ($admin->role !== 'hod_admin') {
-            abort(403, 'Access denied. HOD admin only.');
+            abort(403, 'Access denied. HOD only.');
         }
 
-        $departmentInfo = [
-            'name' => $admin->department,
-            'staff_count' => Admin::where('department', $admin->department)
-                ->where('role', '!=', 'hod_admin')
+        $departmentStats = [
+            'total_students' => Application::where('department', $admin->department)
+                ->where('status', 'final_approved')
                 ->count(),
-            'applications_count' => Application::where('department', $admin->department)->count(),
-            'pending_approvals' => Application::where('department', $admin->department)
+            'pending_applications' => Application::where('department', $admin->department)
                 ->where('status', 'academic_approved')
-                ->count()
+                ->count(),
+            'total_applications' => Application::where('department', $admin->department)->count(),
         ];
 
-        return view('admin.department.info', compact('departmentInfo'));
+        return view('admin.hod.department', compact('departmentStats', 'admin'));
     }
 
     public function departmentApplications()
@@ -109,51 +131,27 @@ class HodController extends Controller
         $admin = Auth::guard('admin')->user();
         
         if ($admin->role !== 'hod_admin') {
-            abort(403, 'Access denied. HOD admin only.');
+            abort(403, 'Access denied. HOD only.');
         }
 
         $applications = Application::where('department', $admin->department)
             ->orderBy('created_at', 'desc')
             ->paginate(20);
 
-        return view('admin.department.applications', compact('applications'));
+        return view('admin.hod.applications', compact('applications', 'admin'));
     }
 
-    public function approveFinal($id)
-    {
-        $admin = Auth::guard('admin')->user();
-        
-        if ($admin->role !== 'hod_admin') {
-            abort(403, 'Access denied. HOD admin only.');
-        }
-
-        $application = Application::findOrFail($id);
-        
-        if ($application->department !== $admin->department) {
-            abort(403, 'Access denied. Application not in your department.');
-        }
-
-        $application->update([
-            'status' => 'approved'
-        ]);
-
-        return redirect()->back()->with('success', 'Application finally approved');
-    }
-
-    // Staff Management Methods - Using Admin model
+    // Staff Management Methods
     public function staffIndex()
     {
         $admin = Auth::guard('admin')->user();
         
         if ($admin->role !== 'hod_admin') {
-            abort(403, 'Access denied. HOD admin only.');
+            abort(403, 'Access denied. HOD only.');
         }
 
-        $staff = Admin::where('department', $admin->department)
-            ->where('role', '!=', 'hod_admin')
-            ->get();
-            
-        return view('admin.staff.index', compact('staff'));
+        $staff = Staff::where('department', $admin->department)->get();
+        return view('admin.hod.staff', compact('staff', 'admin'));
     }
 
     public function staffStore(Request $request)
@@ -161,24 +159,20 @@ class HodController extends Controller
         $admin = Auth::guard('admin')->user();
         
         if ($admin->role !== 'hod_admin') {
-            abort(403, 'Access denied. HOD admin only.');
+            abort(403, 'Access denied. HOD only.');
         }
 
         $request->validate([
-            'name' => 'required',
-            'email' => 'required|email|unique:admins',
-            'position' => 'required',
-            'role' => 'required|in:teacher_admin,haa_admin,fa_admin'
+            'name' => 'required|string|max:255',
+            'email' => 'required|email|unique:staff,email',
+            'position' => 'required|string|max:255',
         ]);
 
-        Admin::create([
+        Staff::create([
             'name' => $request->name,
             'email' => $request->email,
-            'password' => bcrypt('password123'), // Default password
-            'department' => $admin->department,
-            'role' => $request->role,
             'position' => $request->position,
-            // Removed is_active as it doesn't exist in your table
+            'department' => $admin->department,
         ]);
 
         return redirect()->back()->with('success', 'Staff member added successfully');
@@ -189,27 +183,22 @@ class HodController extends Controller
         $admin = Auth::guard('admin')->user();
         
         if ($admin->role !== 'hod_admin') {
-            abort(403, 'Access denied. HOD admin only.');
+            abort(403, 'Access denied. HOD only.');
         }
 
-        $staff = Admin::where('department', $admin->department)
-            ->where('id', $id)
-            ->firstOrFail();
+        $staff = Staff::findOrFail($id);
         
+        if ($staff->department !== $admin->department) {
+            abort(403, 'Access denied.');
+        }
+
         $request->validate([
-            'name' => 'required',
-            'email' => 'required|email|unique:admins,email,' . $id,
-            'position' => 'required',
-            'role' => 'required|in:teacher_admin,haa_admin,fa_admin'
+            'name' => 'required|string|max:255',
+            'email' => 'required|email|unique:staff,email,' . $id,
+            'position' => 'required|string|max:255',
         ]);
 
-        $staff->update([
-            'name' => $request->name,
-            'email' => $request->email,
-            'position' => $request->position,
-            'role' => $request->role,
-            // Removed is_active as it doesn't exist in your table
-        ]);
+        $staff->update($request->all());
 
         return redirect()->back()->with('success', 'Staff member updated successfully');
     }
@@ -219,13 +208,16 @@ class HodController extends Controller
         $admin = Auth::guard('admin')->user();
         
         if ($admin->role !== 'hod_admin') {
-            abort(403, 'Access denied. HOD admin only.');
+            abort(403, 'Access denied. HOD only.');
         }
 
-        $staff = Admin::where('department', $admin->department)
-            ->where('id', $id)
-            ->firstOrFail();
-            
+        $staff = Staff::findOrFail($id);
+        
+        if ($staff->department !== $admin->department) {
+            abort(403, 'Access denied.');
+            return view('admin.dashboard-hod', compact('stats', 'admin'));
+        }
+
         $staff->delete();
 
         return redirect()->back()->with('success', 'Staff member deleted successfully');
