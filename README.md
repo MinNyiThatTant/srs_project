@@ -32,7 +32,7 @@ http://localhost/srs_project/public/admin/fa
 http://localhost/srs_project/public/admin/pending-payments
 
 
-
+php artisan db:seed
 
 
 

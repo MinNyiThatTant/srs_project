@@ -364,7 +364,7 @@
                                 <button type="submit" class="btn btn-submit btn-lg" id="submitBtn">
                                     <i class="fas fa-paper-plane me-2"></i>SUBMIT APPLICATION
                                 </button>
-                                <a href="{{ route('choose.login') }}" class="btn btn-secondary btn-lg ms-2">
+                                <a href="{{ route('index') }}" class="btn btn-secondary btn-lg ms-2">
                                     <i class="fas fa-times me-2"></i>CANCEL
                                 </a>
                             </div>

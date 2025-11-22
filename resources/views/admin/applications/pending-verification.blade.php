@@ -1,9 +1,9 @@
 @extends('admin.layouts.master')
-@section('title', 'Applications for Academic Approval')
+@section('title', 'Pending Payment Verifications')
 @section('content')
 <div class="card">
     <div class="card-header">
-        <h4>Applications Ready for Academic Approval</h4>
+        <h4>Applications Pending Payment Verification</h4>
     </div>
     <div class="card-body">
         <table class="table table-striped">
@@ -11,9 +11,10 @@
                 <tr>
                     <th>Application ID</th>
                     <th>Name</th>
-                    <th>Department</th>
-                    <th>Finance Approved At</th>
-                    <th>Actions</th>
+                    <th>Email</th>
+                    <th>Payment Amount</th>
+                    <th>Payment Date</th>
+                    <th>Action</th>
                 </tr>
             </thead>
             <tbody>
@@ -21,13 +22,13 @@
                 <tr>
                     <td>{{ $application->application_id }}</td>
                     <td>{{ $application->name }}</td>
-                    <td>{{ $application->department }}</td>
-                    <td>{{ $application->academic_approved_at->format('M d, Y H:i') }}</td>
+                    <td>{{ $application->email }}</td>
+                    <td>{{ number_format($application->payments->first()->amount) }} MMK</td>
+                    <td>{{ $application->payments->first()->paid_at->format('M d, Y') }}</td>
                     <td>
-                        <a href="{{ route('admin.academic.application.view', $application->id) }}" class="btn btn-info btn-sm">View</a>
-                        <form action="{{ route('admin.academic.approve-application', $application->id) }}" method="POST" class="d-inline">
+                        <form action="{{ route('admin.finance.verify-payment', $application->id) }}" method="POST">
                             @csrf
-                            <button type="submit" class="btn btn-success btn-sm">Approve & Create Student</button>
+                            <button type="submit" class="btn btn-success btn-sm">Verify Payment</button>
                         </form>
                     </td>
                 </tr>

@@ -1,4 +1,4 @@
-@extends('admin.layouts.app')
+@extends('admin.layouts.master')
 
 @section('title', 'Payment Details')
 
