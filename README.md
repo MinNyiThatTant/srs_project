@@ -9,7 +9,7 @@ php artisan make:middleware AdminAuthenticate
 php artisan make:controller LoginController
 php artisan make:view login
 
-```bash
+
 php artisan config:clear
 php artisan cache:clear
 php artisan route:clear
@@ -18,10 +18,10 @@ php artisan session:clear
 php artisan optimize:clear
 composer dump-autoload
 
-``
 
 
-```bash
+
+
 php artisan make:migration add_is_active_to_admins_table --table=admins
 php artisan migrate
 php artisan route:list --name=applications
@@ -33,9 +33,8 @@ php artisan make:model Staff -m
 php artisan make:migration update_payment_method_column_length_in_payments_table
 php artisan migrate
 php artisan make:migration add_student_id_to_students_table
-```
 
-```bash
+
 php artisan tinker
 $app = \App\Models\Application::latest()->first();
 echo "Status: " . $app->status . "\n";
