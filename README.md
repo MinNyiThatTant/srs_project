@@ -9,7 +9,7 @@ php artisan make:middleware AdminAuthenticate
 php artisan make:controller LoginController
 php artisan make:view login
 
-
+///
 php artisan config:clear
 php artisan cache:clear
 php artisan route:clear
