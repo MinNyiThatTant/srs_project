@@ -9,7 +9,7 @@ php artisan make:middleware AdminAuthenticate
 php artisan make:controller LoginController
 php artisan make:view login
 
-///
+```bash
 php artisan config:clear
 php artisan cache:clear
 php artisan route:clear
@@ -18,7 +18,10 @@ php artisan session:clear
 php artisan optimize:clear
 composer dump-autoload
 
---------------------------------
+``
+
+
+```bash
 php artisan make:migration add_is_active_to_admins_table --table=admins
 php artisan migrate
 php artisan route:list --name=applications
@@ -30,15 +33,16 @@ php artisan make:model Staff -m
 php artisan make:migration update_payment_method_column_length_in_payments_table
 php artisan migrate
 php artisan make:migration add_student_id_to_students_table
+```
 
+```bash
 php artisan tinker
 $app = \App\Models\Application::latest()->first();
 echo "Status: " . $app->status . "\n";
 echo "Payment Status: " . $app->payment_status . "\n";
 exit;
+```
 
-
-php artisan route:list --name=applications
 
 
 
@@ -53,11 +57,12 @@ http://localhost:8000/admin/applications/academic
 php artisan tinker
 \Schema::getConnection()->getDoctrineSchemaManager()->listTableColumns('payments');
 
-
+``bash
 php artisan route:list --name=hod
 php artisan route:list | findstr "hsa"
 php artisan route:list | grep academic
 php artisan route:list | findstr academic
+```
 --------------------------------
 
 
@@ -71,9 +76,9 @@ http://localhost/srs_project/public/admin/finance-applications
 http://localhost/srs_project/public/admin/fa
 http://localhost/srs_project/public/admin/pending-payments
 
-
+```bash
 php artisan db:seed
-
+```
 
 
 
