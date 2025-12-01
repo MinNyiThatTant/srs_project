@@ -20,21 +20,17 @@ class Student extends Authenticatable
         'phone',
         'password',
         'department',
-<<<<<<< HEAD
-=======
         'academic_year',
->>>>>>> 804ca6b01de22ecd4261ad52d2b3976e1dca103c
         'date_of_birth',
         'gender',
         'nrc_number',
         'address',
         'status',
         'registration_date',
-<<<<<<< HEAD
         'academic_year',
-=======
         'last_login_at',
->>>>>>> 804ca6b01de22ecd4261ad52d2b3976e1dca103c
+        'profile_picture',
+        'needs_password_change',
     ];
 
     protected $hidden = [
@@ -45,11 +41,8 @@ class Student extends Authenticatable
     protected $casts = [
         'date_of_birth' => 'date',
         'registration_date' => 'datetime',
-<<<<<<< HEAD
-        // 'last_login_at' => 'datetime',
-=======
         'last_login_at' => 'datetime',
->>>>>>> 804ca6b01de22ecd4261ad52d2b3976e1dca103c
+        'needs_password_change' => 'boolean',
     ];
 
     // Relationship with application
@@ -104,6 +97,18 @@ class Student extends Authenticatable
     }
 
     /**
+     * Get profile picture URL
+     */
+    public function getProfilePictureUrlAttribute()
+    {
+        if ($this->profile_picture && Storage::exists('student-profiles/' . $this->profile_picture)) {
+            return asset('storage/student-profiles/' . $this->profile_picture);
+        }
+        // Use a default avatar from a CDN or local file
+        return 'https://ui-avatars.com/api/?name=' . urlencode($this->name) . '&color=7F9CF5&background=EBF4FF';
+    }
+
+    /**
      * Get formatted date of birth
      */
     public function getFormattedDateOfBirthAttribute()
@@ -117,5 +122,39 @@ class Student extends Authenticatable
     public function isActive()
     {
         return $this->status === 'active';
+    }
+
+    /**
+     * Scope active students
+     */
+    public function scopeActive($query)
+    {
+        return $query->where('status', 'active');
+    }
+
+
+
+    /**
+     * Get the student's academic standing
+     */
+    public function getAcademicStandingAttribute()
+    {
+        // Calculate based on CGPA if not stored
+        if ($this->cgpa) {
+            if ($this->cgpa >= 3.0) return 'excellent';
+            if ($this->cgpa >= 2.0) return 'good';
+            if ($this->cgpa >= 1.5) return 'warning';
+            return 'probation';
+        }
+
+        return $this->attributes['academic_standing'] ?? 'good';
+    }
+
+    /**
+     * Get the student's current CGPA
+     */
+    public function getCgpaAttribute()
+    {
+        return $this->attributes['cgpa'] ?? 0.0;
     }
 }

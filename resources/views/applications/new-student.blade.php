@@ -5,7 +5,7 @@
 @section('body-class', 'light-blue-bg')
 
 @section('content')
-<<<<<<< HEAD
+
     <style>
         body {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -475,7 +475,7 @@
                                     @enderror
                                 </div>
                             </div>
-<<<<<<< HEAD
+
 
                             <!-- 2nd Priority -->
                             <div class="department-preference">
@@ -499,19 +499,17 @@
                                         This department will be considered if you don't qualify for your first choice.
                                     </div>
                                     @error('second_priority_department')
-=======
                             <div class="col-md-6">
                                 <div class="mb-3">
                                     <label for="email" class="form-label required">Email Address</label>
                                     <input type="email" class="form-control @error('email') is-invalid @enderror" id="email" name="email"
                                            value="{{ old('email') }}" placeholder="Enter your email" required>
                                     @error('email')
->>>>>>> 804ca6b01de22ecd4261ad52d2b3976e1dca103c
                                         <div class="invalid-feedback">{{ $message }}</div>
                                     @enderror
                                 </div>
                             </div>
-<<<<<<< HEAD
+
 
                             <!-- 3rd Priority -->
                             <div class="department-preference">
@@ -535,7 +533,6 @@
                                         This department will be considered if you don't qualify for your first two choices.
                                     </div>
                                     @error('third_priority_department')
-=======
                         </div>
 
                         <div class="row">
@@ -545,12 +542,11 @@
                                     <input type="tel" class="form-control @error('phone') is-invalid @enderror" id="phone" name="phone"
                                            value="{{ old('phone') }}" placeholder="09XXXXXXXXX" required>
                                     @error('phone')
->>>>>>> 804ca6b01de22ecd4261ad52d2b3976e1dca103c
                                         <div class="invalid-feedback">{{ $message }}</div>
                                     @enderror
                                 </div>
                             </div>
-<<<<<<< HEAD
+
 
                             <!-- 4th Priority -->
                             <div class="department-preference">
@@ -574,19 +570,17 @@
                                         Optional: This department will be considered if needed.
                                     </div>
                                     @error('fourth_priority_department')
-=======
                             <div class="col-md-6">
                                 <div class="mb-3">
                                     <label for="date_of_birth" class="form-label required">Date of Birth</label>
                                     <input type="date" class="form-control @error('date_of_birth') is-invalid @enderror" id="date_of_birth" name="date_of_birth"
                                            value="{{ old('date_of_birth') }}" required>
                                     @error('date_of_birth')
->>>>>>> 804ca6b01de22ecd4261ad52d2b3976e1dca103c
                                         <div class="invalid-feedback">{{ $message }}</div>
                                     @enderror
                                 </div>
                             </div>
-<<<<<<< HEAD
+
 
                             <!-- 5th Priority -->
                             <div class="department-preference">
@@ -610,7 +604,6 @@
                                         Optional: This is your last preference.
                                     </div>
                                     @error('fifth_priority_department')
-=======
                         </div>
 
                         <div class="row">
@@ -624,12 +617,12 @@
                                         <option value="other" {{ old('gender') == 'other' ? 'selected' : '' }}>Other</option>
                                     </select>
                                     @error('gender')
->>>>>>> 804ca6b01de22ecd4261ad52d2b3976e1dca103c
+
                                         <div class="invalid-feedback">{{ $message }}</div>
                                     @enderror
                                 </div>
                             </div>
-<<<<<<< HEAD
+
 
                             <!-- Educational Background Section -->
                             <h4 class="section-title">
@@ -773,7 +766,6 @@
                             </div>
                         </form>
                     </div>
-=======
                             <div class="col-md-6">
                                 <div class="mb-3">
                                     <label for="nationality" class="form-label required">Nationality</label>
@@ -977,12 +969,11 @@
                             </div>
                         </div>
                     </form>
->>>>>>> 804ca6b01de22ecd4261ad52d2b3976e1dca103c
                 </div>
             </div>
         </div>
     </div>
-<<<<<<< HEAD
+
 
     <!-- Terms and Conditions Modal -->
     <div class="modal fade" id="termsModal" tabindex="-1" aria-labelledby="termsModalLabel" aria-hidden="true">
@@ -1342,5 +1333,4 @@
         });
     });
 </script>
->>>>>>> 804ca6b01de22ecd4261ad52d2b3976e1dca103c
 @endsection
