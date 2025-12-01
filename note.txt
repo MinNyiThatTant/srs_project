@@ -1,0 +1,6 @@
+student apply - get application ID
+finance admin verify payment - payment_verified
+academic admin reviews academics - academic_approved
+hod admin gives final approval - approved
+system automatically generates student credentials
+student can login with generated credentials
