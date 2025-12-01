@@ -76,11 +76,11 @@ php artisan route:list | findstr academic
 ```
 ---------------------------------------------------------------------------------------
 
-
+```bash
 Mail::raw('Test email', function($message) {
     $message->to('royalmntt@gmail.com')->subject('Test');
 });
-
+```
 
 __________________________
 http://localhost/srs_project/public/admin/finance-applications
