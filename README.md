@@ -76,13 +76,14 @@ Mail::raw('Test email', function($message) {
     $message->to('royalmntt@gmail.com')->subject('Test');
 });
 
+------------------------------------------------------------------
 
 __________________________
 http://localhost/srs_project/public/admin/finance-applications
 http://localhost/srs_project/public/admin/fa
 http://localhost/srs_project/public/admin/pending-payments
 
-
+------------------------------------------------------------------
 
 
 #roles account sample data
