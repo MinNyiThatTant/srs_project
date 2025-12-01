@@ -84,18 +84,11 @@ Mail::raw('Test email', function($message) {
     $message->to('royalmntt@gmail.com')->subject('Test');
 });
 
-<<<<<<< HEAD
-------------------------------------------------------------------
-=======
->>>>>>> 804ca6b01de22ecd4261ad52d2b3976e1dca103c
 
 __________________________
 http://localhost/srs_project/public/admin/finance-applications
 http://localhost/srs_project/public/admin/fa
 http://localhost/srs_project/public/admin/pending-payments
-
-<<<<<<< HEAD
-------------------------------------------------------------------
 
 
 #roles account sample data
