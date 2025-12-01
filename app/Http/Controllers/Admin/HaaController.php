@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\DB;
 
 class HaaController extends Controller
 {
@@ -37,12 +38,13 @@ class HaaController extends Controller
     {
         return [
             'pending_reviews' => Application::where('status', 'payment_verified')->count(),
-            'approved_today' => Application::where('status', 'academic_approved') // Changed key to match blade file
+            'assigned_pending' => Application::where('status', 'department_assigned')->count(),
+            'academic_approved' => Application::where('status', 'academic_approved')->count(),
+            'total_students' => Student::count(),
+            'approved_today' => Application::where('status', 'academic_approved')
                 ->whereDate('academic_approved_at', today())
                 ->count(),
-            'total_reviewed' => Application::whereIn('status', ['academic_approved', 'approved']) // Changed key to match blade file
-                ->count(),
-            'total_students' => Student::count(), // Changed key to match blade file
+            'total_reviewed' => Application::whereIn('status', ['academic_approved', 'approved'])->count(),
         ];
     }
 
@@ -62,7 +64,10 @@ class HaaController extends Controller
         return view('admin.academic.applications', compact('applications', 'admin'));
     }
 
-    public function academicApprove($id)
+    /**
+     * View application details
+     */
+    public function viewApplication($id)
     {
         $admin = Auth::guard('admin')->user();
 
@@ -70,20 +75,57 @@ class HaaController extends Controller
             abort(403, 'Access denied. Academic admin only.');
         }
 
+        $application = Application::with(['payments'])->findOrFail($id);
+        $departments = $this->getAllDepartments();
+        
+        return view('admin.academic.application-view', compact('application', 'admin', 'departments'));
+    }
+
+    /**
+     * Quick assign department AND approve application (create student account)
+     */
+    public function quickAssign(Request $request, $id)
+    {
+        $admin = Auth::guard('admin')->user();
+
+        if ($admin->role !== 'haa_admin') {
+            abort(403, 'Access denied. Academic admin only.');
+        }
+
+        $request->validate([
+            'priority_department' => 'required|string|max:255'
+        ]);
+
         $application = Application::findOrFail($id);
 
         if ($application->status !== 'payment_verified') {
-            return redirect()->back()->with('error', 'Application is not ready for academic approval. Payment must be verified first.');
+            return redirect()->back()->with('error', 'Application is not ready for department assignment. Payment must be verified first.');
         }
 
+        DB::beginTransaction();
+
         try {
+            $assignedDepartment = $request->priority_department;
+
             // Generate student ID and password
             $studentId = $this->generateStudentId();
             $password = Str::random(12);
 
-            Log::info('Creating student account during academic approval', [
+            Log::info('Creating student account during quick assign', [
                 'application_id' => $application->id,
-                'student_id' => $studentId
+                'student_id' => $studentId,
+                'assigned_department' => $assignedDepartment
+            ]);
+
+            // Update application with assigned department AND academic approval
+            $application->update([
+                'assigned_department' => $assignedDepartment,
+                'status' => 'academic_approved',
+                'department_assigned_by' => $admin->id,
+                'department_assigned_at' => now(),
+                'academic_approved_by' => $admin->id,
+                'academic_approved_at' => now(),
+                'student_id' => $studentId,
             ]);
 
             // Create student record
@@ -94,52 +136,215 @@ class HaaController extends Controller
                 'email' => $application->email,
                 'phone' => $application->phone,
                 'password' => Hash::make($password),
-                'department' => $application->department,
+                'department' => $assignedDepartment,
                 'date_of_birth' => $application->date_of_birth,
                 'gender' => $application->gender,
                 'nrc_number' => $application->nrc_number,
                 'address' => $application->address,
-                'status' => 'pending', // Set to pending until HOD approval
+                'status' => 'active',
+                'registration_date' => now(),
+                'academic_year' => date('Y'),
+            ]);
+
+            // Send student credentials email
+            $emailSent = $this->sendStudentCredentialsEmail($student, $password, $assignedDepartment);
+
+            DB::commit();
+
+            if ($emailSent) {
+                return redirect()->route('admin.applications.academic')->with('success', 
+                    "Application approved! Department {$assignedDepartment} assigned and student account created. " .
+                    "Student ID: {$studentId}. Credentials sent to student email."
+                );
+            } else {
+                return redirect()->route('admin.applications.academic')->with('warning', 
+                    "Application approved but failed to send email. " .
+                    "Department: {$assignedDepartment}, Student ID: {$studentId}. Please contact the student directly."
+                );
+            }
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Quick department assignment and approval failed: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Department assignment and approval failed: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Assign custom department AND approve application (create student account)
+     */
+    public function assignDepartment(Request $request, $id)
+    {
+        $admin = Auth::guard('admin')->user();
+
+        if ($admin->role !== 'haa_admin') {
+            abort(403, 'Access denied. Academic admin only.');
+        }
+
+        $request->validate([
+            'assigned_department' => 'required|string|max:255'
+        ]);
+
+        $application = Application::findOrFail($id);
+
+        if ($application->status !== 'payment_verified') {
+            return redirect()->back()->with('error', 'Application is not ready for department assignment. Payment must be verified first.');
+        }
+
+        DB::beginTransaction();
+
+        try {
+            $assignedDepartment = $request->assigned_department;
+
+            // Generate student ID and password
+            $studentId = $this->generateStudentId();
+            $password = Str::random(12);
+
+            Log::info('Creating student account during custom department assignment', [
+                'application_id' => $application->id,
+                'student_id' => $studentId,
+                'assigned_department' => $assignedDepartment
+            ]);
+
+            // Update application with assigned department AND academic approval
+            $application->update([
+                'assigned_department' => $assignedDepartment,
+                'status' => 'academic_approved',
+                'department_assigned_by' => $admin->id,
+                'department_assigned_at' => now(),
+                'academic_approved_by' => $admin->id,
+                'academic_approved_at' => now(),
+                'student_id' => $studentId,
+            ]);
+
+            // Create student record
+            $student = Student::create([
+                'student_id' => $studentId,
+                'application_id' => $application->id,
+                'name' => $application->name,
+                'email' => $application->email,
+                'phone' => $application->phone,
+                'password' => Hash::make($password),
+                'department' => $assignedDepartment,
+                'date_of_birth' => $application->date_of_birth,
+                'gender' => $application->gender,
+                'nrc_number' => $application->nrc_number,
+                'address' => $application->address,
+                'status' => 'active',
+                'registration_date' => now(),
+                'academic_year' => date('Y'),
+            ]);
+
+            // Send student credentials email
+            $emailSent = $this->sendStudentCredentialsEmail($student, $password, $assignedDepartment);
+
+            DB::commit();
+
+            if ($emailSent) {
+                return redirect()->route('admin.applications.academic')->with('success', 
+                    "Application approved! Department {$assignedDepartment} assigned and student account created. " .
+                    "Student ID: {$studentId}. Credentials sent to student email."
+                );
+            } else {
+                return redirect()->route('admin.applications.academic')->with('warning', 
+                    "Application approved but failed to send email. " .
+                    "Department: {$assignedDepartment}, Student ID: {$studentId}. Please contact the student directly."
+                );
+            }
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Custom department assignment and approval failed: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Department assignment and approval failed: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Separate academic approval for already assigned departments
+     */
+    public function academicApprove($id)
+    {
+        $admin = Auth::guard('admin')->user();
+
+        if ($admin->role !== 'haa_admin') {
+            abort(403, 'Access denied. Academic admin only.');
+        }
+
+        $application = Application::findOrFail($id);
+
+        // Check if department is assigned
+        if (!$application->assigned_department) {
+            return redirect()->back()->with('error', 'Please assign a department before approving the application.');
+        }
+
+        // Check if application is in correct status
+        if ($application->status !== 'department_assigned') {
+            return redirect()->back()->with('error', 'Application must have department assigned first.');
+        }
+
+        DB::beginTransaction();
+
+        try {
+            $assignedDepartment = $application->assigned_department;
+
+            // Generate student ID and password
+            $studentId = $this->generateStudentId();
+            $password = Str::random(12);
+
+            Log::info('Creating student account during academic approval', [
+                'application_id' => $application->id,
+                'student_id' => $studentId,
+                'assigned_department' => $assignedDepartment
+            ]);
+
+            // Create student record
+            $student = Student::create([
+                'student_id' => $studentId,
+                'application_id' => $application->id,
+                'name' => $application->name,
+                'email' => $application->email,
+                'phone' => $application->phone,
+                'password' => Hash::make($password),
+                'department' => $assignedDepartment,
+                'date_of_birth' => $application->date_of_birth,
+                'gender' => $application->gender,
+                'nrc_number' => $application->nrc_number,
+                'address' => $application->address,
+                'status' => 'active',
                 'registration_date' => now(),
                 'academic_year' => date('Y'),
             ]);
 
             // Update application with academic approval and student ID
             $application->update([
-                'status' => 'academic_approved', // Ready for HOD approval
+                'status' => 'academic_approved',
                 'academic_approved_by' => $admin->id,
                 'academic_approved_at' => now(),
                 'student_id' => $studentId,
             ]);
 
             // Send student credentials email
-            $emailSent = $this->sendStudentCredentialsEmail($student, $password);
+            $emailSent = $this->sendStudentCredentialsEmail($student, $password, $assignedDepartment);
+
+            DB::commit();
 
             if ($emailSent) {
-                Log::info('Student credentials email sent successfully', [
-                    'student_id' => $studentId,
-                    'email' => $student->email
-                ]);
-                return redirect()->back()->with('success', 'Application academically approved! Student account created and credentials sent to email. Student ID: ' . $studentId . ' - Now waiting for HOD final approval.');
+                return redirect()->route('admin.applications.academic')->with('success', 
+                    "Application academically approved! Student account created and credentials sent to email. " .
+                    "Assigned Department: {$assignedDepartment}, Student ID: {$studentId}"
+                );
             } else {
-                Log::error('Failed to send student credentials email', [
-                    'student_id' => $studentId,
-                    'email' => $student->email
-                ]);
-                return redirect()->back()->with('warning', 'Application academically approved but failed to send email. Student ID: ' . $studentId . '. Please contact the student directly.');
+                return redirect()->route('admin.applications.academic')->with('warning', 
+                    "Application academically approved but failed to send email. " .
+                    "Assigned Department: {$assignedDepartment}, Student ID: {$studentId}. Please contact the student directly."
+                );
             }
+
         } catch (\Exception $e) {
+            DB::rollBack();
             Log::error('Academic approval failed: ' . $e->getMessage());
             return redirect()->back()->with('error', 'Academic approval failed: ' . $e->getMessage());
         }
-    }
-
-    /**
-     * Quick approve - academic approval with student creation and email
-     */
-    public function quickApprove($id)
-    {
-        return $this->academicApprove($id);
     }
 
     /**
@@ -165,29 +370,46 @@ class HaaController extends Controller
     }
 
     /**
+     * Get all available departments
+     */
+    private function getAllDepartments()
+    {
+        return [
+            'Civil Engineering',
+            'Computer Engineering and Information Technology',
+            'Electronic Engineering',
+            'Electrical Power Engineering',
+            'Architecture',
+            'Biotechnology',
+            'Textile Engineering',
+            'Mechanical Engineering',
+            'Chemical Engineering',
+            'Automobile Engineering',
+            'Mechatronic Engineering',
+            'Metallurgy Engineering'
+        ];
+    }
+
+    /**
      * Send student credentials email
      */
-    private function sendStudentCredentialsEmail($student, $password)
+    private function sendStudentCredentialsEmail($student, $password, $department)
     {
         try {
             Log::info('Attempting to send student credentials email', [
                 'student_id' => $student->student_id,
-                'email' => $student->email
+                'email' => $student->email,
+                'department' => $department
             ]);
 
             Mail::send('emails.student-credentials', [
                 'student' => $student,
                 'password' => $password,
+                'department' => $department,
                 'loginUrl' => route('student.login'),
-                'status' => 'pending' // Inform student that HOD approval is pending
-            ], function ($message) use ($student) {
+            ], function ($message) use ($student, $department) {
                 $message->to($student->email)
-                    ->subject('Your Student Account Credentials - WYTU University - Pending Final Approval');
-
-                Log::info('Email prepared for sending', [
-                    'to' => $student->email,
-                    'subject' => 'Your Student Account Credentials - WYTU University - Pending Final Approval'
-                ]);
+                    ->subject("Your Student Account Credentials - WYTU University - {$department}");
             });
 
             Log::info('Student credentials email sent successfully', [
@@ -218,7 +440,7 @@ class HaaController extends Controller
 
         $application = Application::findOrFail($id);
 
-        if ($application->status !== 'payment_verified') {
+        if (!in_array($application->status, ['payment_verified', 'department_assigned'])) {
             return redirect()->back()->with('error', 'Application is not in correct status for rejection.');
         }
 
@@ -229,7 +451,7 @@ class HaaController extends Controller
             'rejected_at' => now(),
         ]);
 
-        return redirect()->back()->with('success', 'Application rejected successfully.');
+        return redirect()->route('admin.applications.academic')->with('success', 'Application rejected successfully.');
     }
 
     public function academicAffairs()
@@ -237,10 +459,15 @@ class HaaController extends Controller
         return view('admin.academic.affairs');
     }
 
+    public function courseManagement()
+    {
+        return view('admin.academic.course-management');
+    }
+
     /**
-     * View application details
+     * View assigned applications ready for approval
      */
-    public function viewApplication($id)
+    public function assignedApplications()
     {
         $admin = Auth::guard('admin')->user();
 
@@ -248,7 +475,12 @@ class HaaController extends Controller
             abort(403, 'Access denied. Academic admin only.');
         }
 
-        $application = Application::with(['payments'])->findOrFail($id);
-        return view('admin.academic.application-view', compact('application', 'admin'));
+        // Get applications that have departments assigned but not approved
+        $applications = Application::where('status', 'department_assigned')
+            ->whereNotNull('assigned_department')
+            ->orderBy('department_assigned_at', 'desc')
+            ->paginate(20);
+
+        return view('admin.academic.assigned-applications', compact('applications', 'admin'));
     }
 }

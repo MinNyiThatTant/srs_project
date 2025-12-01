@@ -22,7 +22,15 @@ class Application extends Model
         'nrc_number',
         'address',
         'application_type',
-        'department',
+        // Department fields
+        'department', // Keep for backward compatibility
+        'first_priority_department',
+        'second_priority_department',
+        'third_priority_department',
+        'fourth_priority_department',
+        'fifth_priority_department',
+        'assigned_department',
+        // Educational background
         'high_school_name',
         'high_school_address',
         'graduation_year',
@@ -44,7 +52,8 @@ class Application extends Model
         'academic_approved_at',
         'final_approved_by',
         'final_approved_at',
-        'rejection_reason',
+        'department_assigned_by', // NEW
+        'department_assigned_at', // NEW
         'password',
     ];
 
@@ -55,16 +64,18 @@ class Application extends Model
         'payment_verified_at' => 'datetime',
         'academic_approved_at' => 'datetime',
         'final_approved_at' => 'datetime',
+        'department_assigned_at' => 'datetime', // NEW
         'graduation_year' => 'integer',
         'matriculation_score' => 'decimal:2',
         'current_year' => 'integer',
         'gateway_response' => 'array'
     ];
 
-    // Status constants
+    // Status constants - UPDATE THIS SECTION ONLY
     const STATUS_PENDING = 'pending';
     const STATUS_PAYMENT_PENDING = 'payment_pending';
     const STATUS_PAYMENT_VERIFIED = 'payment_verified';
+    const STATUS_DEPARTMENT_ASSIGNED = 'department_assigned'; 
     const STATUS_ACADEMIC_APPROVED = 'academic_approved';
     const STATUS_APPROVED = 'approved';
     const STATUS_REJECTED = 'rejected';
@@ -125,6 +136,11 @@ class Application extends Model
         return $query->where('status', self::STATUS_PAYMENT_VERIFIED);
     }
 
+    public function scopeDepartmentAssigned($query) // NEW SCOPE
+    {
+        return $query->where('status', self::STATUS_DEPARTMENT_ASSIGNED);
+    }
+
     public function scopeAcademicApproved($query)
     {
         return $query->where('status', self::STATUS_ACADEMIC_APPROVED);
@@ -147,6 +163,7 @@ class Application extends Model
                 self::STATUS_PENDING,
                 self::STATUS_PAYMENT_PENDING,
                 self::STATUS_PAYMENT_VERIFIED,
+                self::STATUS_DEPARTMENT_ASSIGNED, // ADDED
                 self::STATUS_ACADEMIC_APPROVED,
                 self::STATUS_APPROVED
             ]);
@@ -184,6 +201,19 @@ class Application extends Model
             'status' => self::STATUS_PAYMENT_VERIFIED
         ]);
     }
+
+    /**
+     * Mark as department assigned
+     */
+    public function markAsDepartmentAssigned($adminId)
+{
+    $this->update([
+        'status' => 'department_assigned',
+        'department_assigned_by' => $adminId,
+        'department_assigned_at' => now(),
+    ]);
+}
+
 
     /**
      * Mark as academically approved
@@ -255,6 +285,38 @@ class Application extends Model
         return $this->student_id;
     }
 
+    public static function checkDuplicate($email, $nrcNumber, $excludeId = null)
+    {
+        $emailQuery = static::where('email', $email)
+            ->whereIn('status', [
+                self::STATUS_PENDING,
+                self::STATUS_PAYMENT_PENDING,
+                self::STATUS_PAYMENT_VERIFIED,
+                self::STATUS_DEPARTMENT_ASSIGNED, // ADDED
+                self::STATUS_ACADEMIC_APPROVED,
+                self::STATUS_APPROVED
+            ]);
+
+        $nrcQuery = static::where('nrc_number', $nrcNumber)
+            ->whereIn('status', [
+                self::STATUS_PENDING,
+                self::STATUS_PAYMENT_PENDING,
+                self::STATUS_PAYMENT_VERIFIED,
+                self::STATUS_DEPARTMENT_ASSIGNED, // ADDED
+                self::STATUS_ACADEMIC_APPROVED,
+                self::STATUS_APPROVED
+            ]);
+
+        if ($excludeId) {
+            $emailQuery->where('id', '!=', $excludeId);
+            $nrcQuery->where('id', '!=', $excludeId);
+        }
+        return [
+            'email_exists' => $emailQuery->exists(),
+            'nrc_exists' => $nrcQuery->exists()
+        ];
+    }
+
     /**
      * Get the status badge class for Bootstrap
      */
@@ -264,6 +326,7 @@ class Application extends Model
             self::STATUS_PENDING => 'bg-warning',
             self::STATUS_PAYMENT_PENDING => 'bg-warning',
             self::STATUS_PAYMENT_VERIFIED => 'bg-info',
+            self::STATUS_DEPARTMENT_ASSIGNED => 'bg-primary', // ADDED
             self::STATUS_ACADEMIC_APPROVED => 'bg-primary',
             self::STATUS_APPROVED => 'bg-success',
             self::STATUS_REJECTED => 'bg-danger',
@@ -295,6 +358,7 @@ class Application extends Model
             self::STATUS_PENDING => 'Pending',
             self::STATUS_PAYMENT_PENDING => 'Payment Pending',
             self::STATUS_PAYMENT_VERIFIED => 'Payment Verified',
+            self::STATUS_DEPARTMENT_ASSIGNED => 'Department Assigned', // ADDED
             self::STATUS_ACADEMIC_APPROVED => 'Academic Approved',
             self::STATUS_APPROVED => 'Approved',
             self::STATUS_REJECTED => 'Rejected',
@@ -351,6 +415,14 @@ class Application extends Model
     }
 
     /**
+     * Check if department is assigned
+     */
+    public function isDepartmentAssigned() // NEW METHOD
+    {
+        return $this->status === self::STATUS_DEPARTMENT_ASSIGNED;
+    }
+
+    /**
      * Check if payment is verified
      */
     public function isPaymentVerified()
@@ -372,6 +444,32 @@ class Application extends Model
     public function isRejected()
     {
         return $this->status === self::STATUS_REJECTED;
+    }
+
+    /**
+     * Get department priorities as an array
+     */
+    public function getDepartmentPriorities()
+    {
+        $priorities = [];
+        
+        if ($this->first_priority_department) {
+            $priorities['First Priority'] = $this->first_priority_department;
+        }
+        if ($this->second_priority_department) {
+            $priorities['Second Priority'] = $this->second_priority_department;
+        }
+        if ($this->third_priority_department) {
+            $priorities['Third Priority'] = $this->third_priority_department;
+        }
+        if ($this->fourth_priority_department) {
+            $priorities['Fourth Priority'] = $this->fourth_priority_department;
+        }
+        if ($this->fifth_priority_department) {
+            $priorities['Fifth Priority'] = $this->fifth_priority_department;
+        }
+        
+        return $priorities;
     }
 
     /**

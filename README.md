@@ -15,7 +15,8 @@ php artisan make:middleware AdminAuthenticate
 php artisan make:controller LoginController
 php artisan make:view login
 
-///
+
+php artisan migrate
 php artisan config:clear
 php artisan cache:clear
 php artisan route:clear
@@ -81,14 +82,10 @@ http://localhost/srs_project/public/admin/finance-applications
 http://localhost/srs_project/public/admin/fa
 http://localhost/srs_project/public/admin/pending-payments
 
-```bash
-php artisan db:seed
-```
 
 
 
-
-//roles account sample data
+#roles account sample data
 
 INSERT INTO `users` (`id`, `name`, `email`, `password`, `role`, `department_id`, `email_verified_at`, `created_at`, `updated_at`) VALUES (3, 'Global Administrator', 'global.admin@wytu.edu.mm', '$2y$12$bYBKQoJSewCbRnBaabqSJO3l3iYIeWoYVE9Cz4FlCJdA1gZ85aPU.', 'global_admin', NULL, NOW(), NOW(), NOW());
 INSERT INTO `users` (`id`, `name`, `email`, `password`, `role`, `department_id`, `email_verified_at`, `created_at`, `updated_at`) VALUES (4, 'CS HOD Admin', 'cs.hod@wytu.edu.mm', '$2y$12$bYBKQoJSewCbRnBaabqSJO3l3iYIeWoYVE9Cz4FlCJdA1gZ85aPU.', 'hod_admin', 1, NOW(), NOW(), NOW());

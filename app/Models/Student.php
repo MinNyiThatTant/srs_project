@@ -20,14 +20,13 @@ class Student extends Authenticatable
         'phone',
         'password',
         'department',
-        'academic_year',
         'date_of_birth',
         'gender',
         'nrc_number',
         'address',
         'status',
         'registration_date',
-        'last_login_at',
+        'academic_year',
     ];
 
     protected $hidden = [
@@ -38,7 +37,7 @@ class Student extends Authenticatable
     protected $casts = [
         'date_of_birth' => 'date',
         'registration_date' => 'datetime',
-        'last_login_at' => 'datetime',
+        // 'last_login_at' => 'datetime',
     ];
 
     // Relationship with application
