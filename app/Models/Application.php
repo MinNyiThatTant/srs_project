@@ -22,6 +22,7 @@ class Application extends Model
         'nrc_number',
         'address',
         'application_type',
+<<<<<<< HEAD
         // Department fields
         'department', // Keep for backward compatibility
         'first_priority_department',
@@ -31,6 +32,9 @@ class Application extends Model
         'fifth_priority_department',
         'assigned_department',
         // Educational background
+=======
+        'department',
+>>>>>>> 804ca6b01de22ecd4261ad52d2b3976e1dca103c
         'high_school_name',
         'high_school_address',
         'graduation_year',
@@ -52,8 +56,12 @@ class Application extends Model
         'academic_approved_at',
         'final_approved_by',
         'final_approved_at',
+<<<<<<< HEAD
         'department_assigned_by', // NEW
         'department_assigned_at', // NEW
+=======
+        'rejection_reason',
+>>>>>>> 804ca6b01de22ecd4261ad52d2b3976e1dca103c
         'password',
     ];
 
@@ -64,18 +72,28 @@ class Application extends Model
         'payment_verified_at' => 'datetime',
         'academic_approved_at' => 'datetime',
         'final_approved_at' => 'datetime',
+<<<<<<< HEAD
         'department_assigned_at' => 'datetime', // NEW
+=======
+>>>>>>> 804ca6b01de22ecd4261ad52d2b3976e1dca103c
         'graduation_year' => 'integer',
         'matriculation_score' => 'decimal:2',
         'current_year' => 'integer',
         'gateway_response' => 'array'
     ];
 
+<<<<<<< HEAD
     // Status constants - UPDATE THIS SECTION ONLY
     const STATUS_PENDING = 'pending';
     const STATUS_PAYMENT_PENDING = 'payment_pending';
     const STATUS_PAYMENT_VERIFIED = 'payment_verified';
     const STATUS_DEPARTMENT_ASSIGNED = 'department_assigned'; 
+=======
+    // Status constants
+    const STATUS_PENDING = 'pending';
+    const STATUS_PAYMENT_PENDING = 'payment_pending';
+    const STATUS_PAYMENT_VERIFIED = 'payment_verified';
+>>>>>>> 804ca6b01de22ecd4261ad52d2b3976e1dca103c
     const STATUS_ACADEMIC_APPROVED = 'academic_approved';
     const STATUS_APPROVED = 'approved';
     const STATUS_REJECTED = 'rejected';
@@ -136,11 +154,14 @@ class Application extends Model
         return $query->where('status', self::STATUS_PAYMENT_VERIFIED);
     }
 
+<<<<<<< HEAD
     public function scopeDepartmentAssigned($query) // NEW SCOPE
     {
         return $query->where('status', self::STATUS_DEPARTMENT_ASSIGNED);
     }
 
+=======
+>>>>>>> 804ca6b01de22ecd4261ad52d2b3976e1dca103c
     public function scopeAcademicApproved($query)
     {
         return $query->where('status', self::STATUS_ACADEMIC_APPROVED);
@@ -163,7 +184,10 @@ class Application extends Model
                 self::STATUS_PENDING,
                 self::STATUS_PAYMENT_PENDING,
                 self::STATUS_PAYMENT_VERIFIED,
+<<<<<<< HEAD
                 self::STATUS_DEPARTMENT_ASSIGNED, // ADDED
+=======
+>>>>>>> 804ca6b01de22ecd4261ad52d2b3976e1dca103c
                 self::STATUS_ACADEMIC_APPROVED,
                 self::STATUS_APPROVED
             ]);
@@ -203,6 +227,7 @@ class Application extends Model
     }
 
     /**
+<<<<<<< HEAD
      * Mark as department assigned
      */
     public function markAsDepartmentAssigned($adminId)
@@ -216,6 +241,8 @@ class Application extends Model
 
 
     /**
+=======
+>>>>>>> 804ca6b01de22ecd4261ad52d2b3976e1dca103c
      * Mark as academically approved
      */
     public function markAsAcademicApproved($approvedBy = null)
@@ -285,6 +312,7 @@ class Application extends Model
         return $this->student_id;
     }
 
+<<<<<<< HEAD
     public static function checkDuplicate($email, $nrcNumber, $excludeId = null)
     {
         $emailQuery = static::where('email', $email)
@@ -317,6 +345,8 @@ class Application extends Model
         ];
     }
 
+=======
+>>>>>>> 804ca6b01de22ecd4261ad52d2b3976e1dca103c
     /**
      * Get the status badge class for Bootstrap
      */
@@ -326,7 +356,10 @@ class Application extends Model
             self::STATUS_PENDING => 'bg-warning',
             self::STATUS_PAYMENT_PENDING => 'bg-warning',
             self::STATUS_PAYMENT_VERIFIED => 'bg-info',
+<<<<<<< HEAD
             self::STATUS_DEPARTMENT_ASSIGNED => 'bg-primary', // ADDED
+=======
+>>>>>>> 804ca6b01de22ecd4261ad52d2b3976e1dca103c
             self::STATUS_ACADEMIC_APPROVED => 'bg-primary',
             self::STATUS_APPROVED => 'bg-success',
             self::STATUS_REJECTED => 'bg-danger',
@@ -358,7 +391,10 @@ class Application extends Model
             self::STATUS_PENDING => 'Pending',
             self::STATUS_PAYMENT_PENDING => 'Payment Pending',
             self::STATUS_PAYMENT_VERIFIED => 'Payment Verified',
+<<<<<<< HEAD
             self::STATUS_DEPARTMENT_ASSIGNED => 'Department Assigned', // ADDED
+=======
+>>>>>>> 804ca6b01de22ecd4261ad52d2b3976e1dca103c
             self::STATUS_ACADEMIC_APPROVED => 'Academic Approved',
             self::STATUS_APPROVED => 'Approved',
             self::STATUS_REJECTED => 'Rejected',
@@ -415,6 +451,7 @@ class Application extends Model
     }
 
     /**
+<<<<<<< HEAD
      * Check if department is assigned
      */
     public function isDepartmentAssigned() // NEW METHOD
@@ -423,6 +460,8 @@ class Application extends Model
     }
 
     /**
+=======
+>>>>>>> 804ca6b01de22ecd4261ad52d2b3976e1dca103c
      * Check if payment is verified
      */
     public function isPaymentVerified()
@@ -447,6 +486,7 @@ class Application extends Model
     }
 
     /**
+<<<<<<< HEAD
      * Get department priorities as an array
      */
     public function getDepartmentPriorities()
@@ -473,6 +513,8 @@ class Application extends Model
     }
 
     /**
+=======
+>>>>>>> 804ca6b01de22ecd4261ad52d2b3976e1dca103c
      * Boot method for generating application ID
      */
     protected static function boot()
@@ -501,4 +543,8 @@ class Application extends Model
             }
         });
     }
+<<<<<<< HEAD
 }
+=======
+}
+>>>>>>> 804ca6b01de22ecd4261ad52d2b3976e1dca103c

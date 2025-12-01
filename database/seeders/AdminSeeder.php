@@ -35,7 +35,11 @@ class AdminSeeder extends Seeder
                 'department' => null,
                 'status' => 'active',
             ],
+<<<<<<< HEAD
             // HOD Accounts - Make sure department names match exactly with your system
+=======
+            // HOD Accounts - Make sure department names match exactly with DepartmentSeeder
+>>>>>>> 804ca6b01de22ecd4261ad52d2b3976e1dca103c
             [
                 'name' => 'HOD - Computer Engineering',
                 'email' => 'hod.ceit@admin.com',
@@ -53,11 +57,19 @@ class AdminSeeder extends Seeder
                 'status' => 'active',
             ],
             [
+<<<<<<< HEAD
                 'name' => 'HOD - Electronic Engineering', 
                 'email' => 'hod.ee@admin.com',
                 'password' => Hash::make('password'),
                 'role' => 'hod_admin',
                 'department' => 'Electronic Engineering', 
+=======
+                'name' => 'HOD - Electronics Engineering',
+                'email' => 'hod.ee@admin.com',
+                'password' => Hash::make('password'),
+                'role' => 'hod_admin',
+                'department' => 'Electronics Engineering',
+>>>>>>> 804ca6b01de22ecd4261ad52d2b3976e1dca103c
                 'status' => 'active',
             ],
             [

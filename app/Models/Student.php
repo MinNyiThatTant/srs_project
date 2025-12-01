@@ -20,13 +20,21 @@ class Student extends Authenticatable
         'phone',
         'password',
         'department',
+<<<<<<< HEAD
+=======
+        'academic_year',
+>>>>>>> 804ca6b01de22ecd4261ad52d2b3976e1dca103c
         'date_of_birth',
         'gender',
         'nrc_number',
         'address',
         'status',
         'registration_date',
+<<<<<<< HEAD
         'academic_year',
+=======
+        'last_login_at',
+>>>>>>> 804ca6b01de22ecd4261ad52d2b3976e1dca103c
     ];
 
     protected $hidden = [
@@ -37,7 +45,11 @@ class Student extends Authenticatable
     protected $casts = [
         'date_of_birth' => 'date',
         'registration_date' => 'datetime',
+<<<<<<< HEAD
         // 'last_login_at' => 'datetime',
+=======
+        'last_login_at' => 'datetime',
+>>>>>>> 804ca6b01de22ecd4261ad52d2b3976e1dca103c
     ];
 
     // Relationship with application

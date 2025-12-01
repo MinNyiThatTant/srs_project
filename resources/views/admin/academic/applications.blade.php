@@ -1,5 +1,6 @@
 @extends('admin.layouts.master')
 
+<<<<<<< HEAD
 @section('title', 'Academic Applications - WYTU University')
 @section('page-title', 'Applications for Academic Review & Department Assignment')
 
@@ -49,10 +50,33 @@
                         <th>Department Preferences</th>
                         <th>Status</th>
                         <th>Quick Actions</th>
+=======
+@section('title', 'Academic Applications')
+@section('page-title', 'Applications for Academic Review')
+
+@section('content')
+<div class="card">
+    <div class="card-header">
+        <h4>Applications Pending Academic Approval</h4>
+    </div>
+    <div class="card-body">
+        @if($applications->count() > 0)
+        <div class="table-responsive">
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>App ID</th>
+                        <th>Name</th>
+                        <th>Department</th>
+                        <th>Email</th>
+                        <th>Payment Status</th>
+                        <th>Actions</th>
+>>>>>>> 804ca6b01de22ecd4261ad52d2b3976e1dca103c
                     </tr>
                 </thead>
                 <tbody>
                     @foreach($applications as $application)
+<<<<<<< HEAD
                     @php
                         $priorities = $application->getDepartmentPriorities();
                     @endphp
@@ -171,6 +195,25 @@
                                         title="Reject Application">
                                     <i class="fas fa-times me-1"></i>Reject
                                 </button>
+=======
+                    <tr>
+                        <td>{{ $application->application_id }}</td>
+                        <td>{{ $application->name }}</td>
+                        <td>{{ $application->department }}</td>
+                        <td>{{ $application->email }}</td>
+                        <td>
+                            <span class="badge bg-success">Verified</span>
+                        </td>
+                        <td>
+                            <div class="btn-group">
+                                <a href="{{ route('admin.academic.application.view', $application->id) }}" 
+                                   class="btn btn-sm btn-primary">View</a>
+                                <form action="{{ route('admin.academic.approve-application', $application->id) }}" method="POST" class="d-inline">
+                                    @csrf
+                                    <button type="submit" class="btn btn-sm btn-success" 
+                                            onclick="return confirm('Approve this application?')">Approve</button>
+                                </form>
+>>>>>>> 804ca6b01de22ecd4261ad52d2b3976e1dca103c
                             </div>
                         </td>
                     </tr>
@@ -178,6 +221,7 @@
                 </tbody>
             </table>
         </div>
+<<<<<<< HEAD
 
         <!-- Pagination -->
         @if($applications->hasPages())
@@ -196,10 +240,16 @@
             <i class="fas fa-inbox fa-4x text-muted mb-3"></i>
             <h4 class="text-muted">No Applications Pending Review</h4>
             <p class="text-muted">All applications have been processed and assigned to departments.</p>
+=======
+        @else
+        <div class="alert alert-info">
+            No applications pending academic review.
+>>>>>>> 804ca6b01de22ecd4261ad52d2b3976e1dca103c
         </div>
         @endif
     </div>
 </div>
+<<<<<<< HEAD
 
 <!-- Assign Department Modal -->
 <div class="modal fade" id="assignDepartmentModal" tabindex="-1" aria-labelledby="assignDepartmentModalLabel" aria-hidden="true">
@@ -447,3 +497,6 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 </script>
 @endpush
+=======
+@endsection
+>>>>>>> 804ca6b01de22ecd4261ad52d2b3976e1dca103c
