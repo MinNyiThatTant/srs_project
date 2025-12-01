@@ -77,7 +77,7 @@ php artisan route:list | findstr "hsa"
 php artisan route:list | grep academic
 php artisan route:list | findstr academic
 ```
---------------------------------
+---------------------------------------------------------------------------------------
 
 
 Mail::raw('Test email', function($message) {
