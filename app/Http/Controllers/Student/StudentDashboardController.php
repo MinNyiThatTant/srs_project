@@ -6,8 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Student;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
 
 class StudentDashboardController extends Controller
 {
@@ -18,44 +17,29 @@ class StudentDashboardController extends Controller
     {
         $student = Auth::guard('student')->user();
         
-        // Get student statistics
-        $stats = $this->getStudentStats($student);
+        // Sample recent activities - you can replace this with actual activity logs
+        $recentActivities = [
+            [
+                'action' => 'Logged in to portal',
+                'date' => now()->format('M d, Y H:i'),
+                'icon' => 'bi-box-arrow-in-right',
+                'color' => 'primary'
+            ],
+            [
+                'action' => 'Updated profile information',
+                'date' => now()->subHours(2)->format('M d, Y H:i'),
+                'icon' => 'bi-person',
+                'color' => 'info'
+            ],
+            [
+                'action' => 'Viewed academic information',
+                'date' => now()->subDays(1)->format('M d, Y H:i'),
+                'icon' => 'bi-journal-text',
+                'color' => 'success'
+            ]
+        ];
 
-        return view('student.dashboard', compact('student', 'stats'));
-    }
-
-    /**
-     * Get student statistics
-     */
-    private function getStudentStats($student)
-    {
-        try {
-            $paymentsCount = $student->payments()->count();
-            $application = $student->application;
-
-            return [
-                'total_payments' => $paymentsCount,
-                'payment_status' => $application->payment_status ?? 'N/A',
-                'application_status' => $application->status ?? 'N/A',
-                'department' => $student->department,
-                'academic_year' => $student->academic_year,
-                'registration_date' => $student->formatted_registration_date,
-            ];
-        } catch (\Exception $e) {
-            Log::error('Error loading student dashboard stats', [
-                'student_id' => $student->student_id,
-                'error' => $e->getMessage()
-            ]);
-            
-            return [
-                'total_payments' => 0,
-                'payment_status' => 'N/A',
-                'application_status' => 'N/A',
-                'department' => $student->department,
-                'academic_year' => $student->academic_year,
-                'registration_date' => $student->formatted_registration_date,
-            ];
-        }
+        return view('student.dashboard.index', compact('student', 'recentActivities'));
     }
 
     /**
@@ -64,7 +48,7 @@ class StudentDashboardController extends Controller
     public function profile()
     {
         $student = Auth::guard('student')->user();
-        return view('student.profile', compact('student'));
+        return view('student.profile.index', compact('student'));
     }
 
     /**
@@ -74,20 +58,30 @@ class StudentDashboardController extends Controller
     {
         $student = Auth::guard('student')->user();
 
-        $request->validate([
+        $validated = $request->validate([
             'name' => 'required|string|max:255',
+            'email' => 'required|email|unique:students,email,' . $student->id,
             'phone' => 'required|string|max:20',
             'address' => 'required|string|max:500',
-            'date_of_birth' => 'required|date',
+            'profile_picture' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
         ]);
 
-        $student->update($request->only(['name', 'phone', 'address', 'date_of_birth']));
+        // Handle profile picture upload
+        if ($request->hasFile('profile_picture')) {
+            // Delete old profile picture if exists
+            if ($student->profile_picture) {
+                Storage::delete('student-profiles/' . $student->profile_picture);
+            }
 
-        Log::info('Student profile updated', [
-            'student_id' => $student->student_id
-        ]);
+            $filename = 'student_' . $student->id . '_' . time() . '.' . $request->file('profile_picture')->getClientOriginalExtension();
+            $request->file('profile_picture')->storeAs('student-profiles', $filename);
+            $validated['profile_picture'] = $filename;
+        }
 
-        return redirect()->back()->with('success', 'Profile updated successfully!');
+        $student->update($validated);
+
+        return redirect()->route('student.profile')
+            ->with('success', 'Profile updated successfully!');
     }
 
     /**
@@ -96,20 +90,35 @@ class StudentDashboardController extends Controller
     public function paymentHistory()
     {
         $student = Auth::guard('student')->user();
-        
-        try {
-            $payments = $student->payments()
-                ->with('application')
-                ->orderBy('created_at', 'desc')
-                ->get();
-        } catch (\Exception $e) {
-            Log::error('Error loading payment history', [
-                'student_id' => $student->student_id,
-                'error' => $e->getMessage()
-            ]);
-            $payments = collect();
-        }
+        $payments = $student->payments()->latest()->get();
 
-        return view('student.payments', compact('student', 'payments'));
+        return view('student.payments.index', compact('student', 'payments'));
+    }
+
+    /**
+     * Show academic information
+     */
+    public function academicInfo()
+    {
+        $student = Auth::guard('student')->user();
+        return view('student.academic.index', compact('student'));
+    }
+
+    /**
+     * Show fee information
+     */
+    public function feesInfo()
+    {
+        $student = Auth::guard('student')->user();
+        return view('student.fees.index', compact('student'));
+    }
+
+    /**
+     * Show documents
+     */
+    public function documents()
+    {
+        $student = Auth::guard('student')->user();
+        return view('student.documents.index', compact('student'));
     }
 }

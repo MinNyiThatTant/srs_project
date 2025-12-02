@@ -80,10 +80,9 @@ Route::get('applications/{applicationId}/retry-payment', [PaymentController::cla
 
 Route::post('check-nrc', [ApplicationController::class, 'checkNrc'])->name('check.nrc');
 Route::post('check-student-id', [ApplicationController::class, 'checkStudentId'])->name('check.student.id');
-<<<<<<< HEAD
+
 Route::post('/check-email', [ApplicationController::class, 'checkEmail'])->name('check.email');
-=======
->>>>>>> 804ca6b01de22ecd4261ad52d2b3976e1dca103c
+
 
 // ========== DEPARTMENT & COURSE ROUTES ==========
 
@@ -135,17 +134,29 @@ Route::prefix('student')->name('student.')->group(function () {
         Route::post('login', [StudentAuthController::class, 'login'])->name('login.submit');
         Route::get('forgot-password', [StudentAuthController::class, 'showForgotPasswordForm'])->name('forgot-password');
         Route::post('forgot-password', [StudentAuthController::class, 'sendResetLink'])->name('forgot-password.submit');
+        Route::get('reset-password/{token}', [StudentAuthController::class, 'showResetPasswordForm'])->name('reset.password');
+        Route::post('reset-password', [StudentAuthController::class, 'resetPassword'])->name('reset.password.submit');
     });
 
     // Protected Student Routes
     Route::middleware(['auth:student'])->group(function () {
+        // Auth routes
         Route::post('logout', [StudentAuthController::class, 'logout'])->name('logout');
+        
+        // Dashboard & Profile
         Route::get('dashboard', [StudentDashboardController::class, 'dashboard'])->name('dashboard');
         Route::get('profile', [StudentDashboardController::class, 'profile'])->name('profile');
         Route::post('profile/update', [StudentDashboardController::class, 'updateProfile'])->name('profile.update');
+        
+        // Password Management
         Route::get('change-password', [StudentAuthController::class, 'showChangePasswordForm'])->name('password.change');
         Route::post('change-password', [StudentAuthController::class, 'changePassword'])->name('password.change.submit');
+        
+        // Academic & Financial
         Route::get('payments', [StudentDashboardController::class, 'paymentHistory'])->name('payments');
+        Route::get('academic-info', [StudentDashboardController::class, 'academicInfo'])->name('academic.info');
+        Route::get('fees-info', [StudentDashboardController::class, 'feesInfo'])->name('fees.info');
+        Route::get('documents', [StudentDashboardController::class, 'documents'])->name('documents');
     });
 });
 
@@ -198,7 +209,7 @@ Route::middleware(['auth:admin'])->prefix('admin')->name('admin.')->group(functi
     Route::get('payments/export', [App\Http\Controllers\Admin\PaymentController::class, 'export'])->name('payments.export');
     Route::post('verify-payment/{id}', [FaController::class, 'verifyPayment'])->name('applications.verify-payment');
 
-<<<<<<< HEAD
+
     // Academic Admin Routes
     Route::get('academic-dashboard', [HaaController::class, 'dashboard'])->name('academic.dashboard');
     Route::get('applications/academic', [HaaController::class, 'academicApplications'])->name('applications.academic');
@@ -211,7 +222,7 @@ Route::middleware(['auth:admin'])->prefix('admin')->name('admin.')->group(functi
     Route::post('academic-approve/{id}', [HaaController::class, 'academicApprove'])->name('applications.academic-approve');
     Route::post('academic-reject/{id}', [HaaController::class, 'academicReject'])->name('applications.academic-reject');
 
-=======
+
    // ========== ACADEMIC ADMIN ROUTES ==========
 Route::get('academic-dashboard', [HaaController::class, 'dashboard'])->name('academic.dashboard');
 Route::get('applications/academic', [HaaController::class, 'academicApplications'])->name('applications.academic');
@@ -224,7 +235,6 @@ Route::get('course-management', [HaaController::class, 'courseManagement'])->nam
 Route::post('approve-academic/{id}', [HaaController::class, 'approveAcademic'])->name('approve.academic');
 Route::get('application/view/{id}', [HaaController::class, 'viewApplication'])->name('applications.view');
 Route::post('final-approve/{id}', [HaaController::class, 'finalApprove'])->name('applications.final-approve');
->>>>>>> 804ca6b01de22ecd4261ad52d2b3976e1dca103c
 
     // ========== HOD ROUTES ==========
     Route::get('hod-dashboard', [HodController::class, 'dashboard'])->name('hod.dashboard');
@@ -232,15 +242,15 @@ Route::post('final-approve/{id}', [HaaController::class, 'finalApprove'])->name(
     Route::get('applications/hod', [HodController::class, 'hodApplications'])->name('applications.hod');
     Route::post('final-approve/{id}', [HodController::class, 'finalApprove'])->name('applications.final-approve');
     Route::post('approve-final/{id}', [HodController::class, 'approveFinal'])->name('approve.final');
-<<<<<<< HEAD
+
     Route::post('applications/hod-reject/{id}', [HodController::class, 'hodReject'])->name('applications.hod-reject');
     Route::get('my-department', [HodController::class, 'myDepartment'])->name('my-department');
     Route::get('department-applications', [HodController::class, 'departmentApplications'])->name('department.applications');
     Route::get('department-students', [HodController::class, 'departmentStudents'])->name('department.students');
-=======
+
     Route::get('my-department', [HodController::class, 'myDepartment'])->name('my-department');
     Route::get('department-applications', [HodController::class, 'departmentApplications'])->name('department.applications');
->>>>>>> 804ca6b01de22ecd4261ad52d2b3976e1dca103c
+
 
     // Staff Management Routes
     Route::get('hod/staff', [HodController::class, 'staffIndex'])->name('hod.staff.index');
@@ -248,11 +258,7 @@ Route::post('final-approve/{id}', [HaaController::class, 'finalApprove'])->name(
     Route::put('hod/staff/{id}', [HodController::class, 'staffUpdate'])->name('hod.staff.update');
     Route::delete('hod/staff/{id}', [HodController::class, 'staffDestroy'])->name('hod.staff.destroy');
 
-<<<<<<< HEAD
-
-=======
->>>>>>> 804ca6b01de22ecd4261ad52d2b3976e1dca103c
-    // ========== HSA ADMIN ROUTES ==========
+// ========== HSA ADMIN ROUTES ==========
     Route::get('hsa-dashboard', [HsaController::class, 'dashboard'])->name('hsa.dashboard');
     Route::get('hsa', [HsaController::class, 'dashboard'])->name('hsa');
     Route::get('staff-management', [HsaController::class, 'staffManagement'])->name('staff.management');
@@ -338,7 +344,7 @@ if (app()->environment('local')) {
         dump(session()->all());
     });
 
-<<<<<<< HEAD
+
     // Debug route for academic admin
     Route::get('/debug-academic-routes', function () {
         $routes = [
@@ -385,7 +391,7 @@ if (app()->environment('local')) {
     });
 
 
-=======
+
     // Debug route for academic routes
     Route::get('/debug-academic-routes', function () {
         $academicRoutes = collect(\Route::getRoutes()->getRoutes())
@@ -405,7 +411,7 @@ if (app()->environment('local')) {
         return response()->json($academicRoutes->values());
     });
 
->>>>>>> 804ca6b01de22ecd4261ad52d2b3976e1dca103c
+
     // Test route to check if admin.academic.dashboard exists
     Route::get('/test-admin-academic-route', function () {
         try {
@@ -545,17 +551,17 @@ Route::get('/check-payment-config', function () {
 
 
 // Add this to your web.php temporarily
-<<<<<<< HEAD
+
 Route::get('/debug-application/{id}', function ($id) {
     try {
         $application = \App\Models\Application::find($id);
 
-=======
+
 Route::get('/debug-application/{id}', function($id) {
     try {
         $application = \App\Models\Application::find($id);
         
->>>>>>> 804ca6b01de22ecd4261ad52d2b3976e1dca103c
+
         if (!$application) {
             return response()->json([
                 'error' => 'Application not found in database',
@@ -575,18 +581,46 @@ Route::get('/debug-application/{id}', function($id) {
             'payment_route' => route('payment.show', $application->id),
             'payment_url' => url('/payment/' . $application->id)
         ]);
-<<<<<<< HEAD
-=======
-        
->>>>>>> 804ca6b01de22ecd4261ad52d2b3976e1dca103c
+
     } catch (\Exception $e) {
         return response()->json([
             'error' => $e->getMessage(),
             'trace' => $e->getTraceAsString()
         ], 500);
     }
-<<<<<<< HEAD
+
 });
-=======
+    } catch (\Exception $e) {
+        return response()->json([
+            'error' => $e->getMessage(),
+            'trace' => $e->getTraceAsString()
+        ], 500);
+    }
 });
->>>>>>> 804ca6b01de22ecd4261ad52d2b3976e1dca103c
+
+
+
+
+
+
+
+
+
+
+
+Route::get('/check-students-table', function() {
+    $columns = \Schema::getColumnListing('students');
+    echo "<h3>Current Students Table Columns:</h3>";
+    echo "<ul>";
+    foreach ($columns as $column) {
+        echo "<li>{$column}</li>";
+    }
+    echo "</ul>";
+    
+    // Check if students table exists
+    if (\Schema::hasTable('students')) {
+        echo "<p style='color: green;'>Students table exists</p>";
+    } else {
+        echo "<p style='color: red;'>Students table does NOT exist</p>";
+    }
+});

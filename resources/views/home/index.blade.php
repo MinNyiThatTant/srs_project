@@ -15,11 +15,11 @@
                 <div class="col-auto">
                     <div class="d-flex flex-wrap justify-content-center gap-3">
                         <!-- Student Login Button -->
-<<<<<<< HEAD
+
                         <a href="{{ route('student.login') }}" class="btn btn-admin-login btn-lg">
-=======
-                        <a href="{{ route('login') }}" class="btn btn-admin-login btn-lg">
->>>>>>> 804ca6b01de22ecd4261ad52d2b3976e1dca103c
+
+                        {{-- <a href="{{ route('login') }}" class="btn btn-admin-login btn-lg"> --}}
+
                             <i class="fas fa-user-graduate me-2"></i>Login<br>
                             <p class="lead mb-0" style="font-size: 0.9rem; opacity: 0.9;">လျောက်လွှာတင်သွင်းမှုပြီးစီးပါက ဤနေရာမှဝင်ရောက်ပါ။</p>
                         </a>

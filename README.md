@@ -8,9 +8,9 @@ php artisan cache:clear
 php artisan migrate
 php artisan serve
 
-=======
+
 php artisan migrate
->>>>>>> 804ca6b01de22ecd4261ad52d2b3976e1dca103c
+
 php artisan migrate:fresh
 
 php artisan make:middleware AdminRedirect
@@ -19,12 +19,9 @@ php artisan make:middleware AdminAuthenticate
 php artisan make:controller LoginController
 php artisan make:view login
 
-<<<<<<< HEAD
+
 
 php artisan migrate
-=======
-///
->>>>>>> 804ca6b01de22ecd4261ad52d2b3976e1dca103c
 php artisan config:clear
 php artisan cache:clear
 php artisan route:clear
@@ -92,11 +89,13 @@ http://localhost/srs_project/public/admin/pending-payments
 
 
 #roles account sample data
-=======
+
 ```bash
 php artisan db:seed
 ```
 
+```bash
+php artisan storage:link
 
 
 

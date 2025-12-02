@@ -116,7 +116,7 @@
             </p>
         </div>
     </div>
-=======
+
     <title>Your Student Account Credentials - WYTU University</title>
 </head>
 <body>
