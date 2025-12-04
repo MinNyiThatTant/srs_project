@@ -1,6 +1,6 @@
 ```bash
 composer create-project laravel/laravel^12.0 srs_project
-<<<<<<< HEAD
+
 composer install
 php artisan key:generate
 php artisan config:clear
@@ -95,15 +95,14 @@ http://localhost/srs_project/public/admin/pending-payments
 
 ```bash
 php artisan db:seed
-```
 
-```bash
+
+
 php artisan storage:link
 
 
 
 //roles account sample data
->>>>>>> 804ca6b01de22ecd4261ad52d2b3976e1dca103c
 
 INSERT INTO `users` (`id`, `name`, `email`, `password`, `role`, `department_id`, `email_verified_at`, `created_at`, `updated_at`) VALUES (3, 'Global Administrator', 'global.admin@wytu.edu.mm', '$2y$12$bYBKQoJSewCbRnBaabqSJO3l3iYIeWoYVE9Cz4FlCJdA1gZ85aPU.', 'global_admin', NULL, NOW(), NOW(), NOW());
 INSERT INTO `users` (`id`, `name`, `email`, `password`, `role`, `department_id`, `email_verified_at`, `created_at`, `updated_at`) VALUES (4, 'CS HOD Admin', 'cs.hod@wytu.edu.mm', '$2y$12$bYBKQoJSewCbRnBaabqSJO3l3iYIeWoYVE9Cz4FlCJdA1gZ85aPU.', 'hod_admin', 1, NOW(), NOW(), NOW());
