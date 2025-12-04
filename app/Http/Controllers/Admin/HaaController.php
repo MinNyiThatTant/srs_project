@@ -6,16 +6,14 @@ use App\Http\Controllers\Controller;
 use App\Models\Application;
 use App\Models\Student;
 use App\Models\Admin;
+use App\Models\StudentAcademicHistory;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Log;
-<<<<<<< HEAD
 use Illuminate\Support\Facades\DB;
-=======
->>>>>>> 804ca6b01de22ecd4261ad52d2b3976e1dca103c
 
 class HaaController extends Controller
 {
@@ -34,14 +32,24 @@ class HaaController extends Controller
             ->orderBy('payment_verified_at', 'desc')
             ->paginate(10);
 
-        return view('admin.academic.dashboard-academic', compact('stats', 'applications', 'admin'));
+        // Get old student applications that need academic verification
+        $oldStudentApps = Application::where('application_type', 'old')
+            ->where('status', 'payment_verified')
+            ->where('needs_academic_approval', true)
+            ->orderBy('created_at', 'desc')
+            ->paginate(10);
+
+        return view('admin.academic.dashboard-academic', compact('stats', 'applications', 'oldStudentApps', 'admin'));
     }
 
     private function getDashboardStats()
     {
         return [
             'pending_reviews' => Application::where('status', 'payment_verified')->count(),
-<<<<<<< HEAD
+            'pending_old_students' => Application::where('application_type', 'old')
+                ->where('status', 'payment_verified')
+                ->where('needs_academic_approval', true)
+                ->count(),
             'assigned_pending' => Application::where('status', 'department_assigned')->count(),
             'academic_approved' => Application::where('status', 'academic_approved')->count(),
             'total_students' => Student::count(),
@@ -49,14 +57,6 @@ class HaaController extends Controller
                 ->whereDate('academic_approved_at', today())
                 ->count(),
             'total_reviewed' => Application::whereIn('status', ['academic_approved', 'approved'])->count(),
-=======
-            'approved_today' => Application::where('status', 'academic_approved') // Changed key to match blade file
-                ->whereDate('academic_approved_at', today())
-                ->count(),
-            'total_reviewed' => Application::whereIn('status', ['academic_approved', 'approved']) // Changed key to match blade file
-                ->count(),
-            'total_students' => Student::count(), // Changed key to match blade file
->>>>>>> 804ca6b01de22ecd4261ad52d2b3976e1dca103c
         ];
     }
 
@@ -68,7 +68,7 @@ class HaaController extends Controller
             abort(403, 'Access denied. Academic admin only.');
         }
 
-        // Get applications that are payment verified (ready for academic review)
+        // Get all applications that are payment verified (ready for academic review)
         $applications = Application::where('status', 'payment_verified')
             ->orderBy('created_at', 'desc')
             ->paginate(20);
@@ -76,11 +76,32 @@ class HaaController extends Controller
         return view('admin.academic.applications', compact('applications', 'admin'));
     }
 
-<<<<<<< HEAD
     /**
-     * View application details
+     * Old student applications that need academic verification
      */
-    public function viewApplication($id)
+    public function oldStudentApplications()
+    {
+        $admin = Auth::guard('admin')->user();
+
+        if ($admin->role !== 'haa_admin') {
+            abort(403, 'Access denied. Academic admin only.');
+        }
+
+        // Get old student applications that need academic verification
+        $applications = Application::where('application_type', 'old')
+            ->where('status', 'payment_verified')
+            ->where('needs_academic_approval', true)
+            ->with(['studentRecord'])
+            ->orderBy('created_at', 'desc')
+            ->paginate(20);
+
+        return view('admin.academic.old-student-applications', compact('applications', 'admin'));
+    }
+
+    /**
+     * View new student application details
+     */
+    public function viewNewApplication($id)
     {
         $admin = Auth::guard('admin')->user();
 
@@ -89,15 +110,46 @@ class HaaController extends Controller
         }
 
         $application = Application::with(['payments'])->findOrFail($id);
+        
+        if ($application->application_type !== 'new') {
+            return redirect()->back()->with('error', 'This is not a new student application.');
+        }
+        
         $departments = $this->getAllDepartments();
         
-        return view('admin.academic.application-view', compact('application', 'admin', 'departments'));
+        return view('admin.academic.new-application-view', compact('application', 'admin', 'departments'));
     }
 
     /**
-     * Quick assign department AND approve application (create student account)
+     * View old student application details for academic verification
      */
-    public function quickAssign(Request $request, $id)
+    public function viewOldApplication($id)
+    {
+        $admin = Auth::guard('admin')->user();
+
+        if ($admin->role !== 'haa_admin') {
+            abort(403, 'Access denied. Academic admin only.');
+        }
+
+        $application = Application::with(['payments', 'studentRecord'])->findOrFail($id);
+        
+        if ($application->application_type !== 'old') {
+            return redirect()->back()->with('error', 'This is not an old student application.');
+        }
+
+        // Get student's academic history
+        $academicHistory = $this->getStudentAcademicHistory($application->student_original_id);
+        
+        // Check if student has passed previous year
+        $eligibilityCheck = $this->checkAcademicEligibility($application->student_original_id, $application->current_year);
+
+        return view('admin.academic.old-application-view', compact('application', 'admin', 'academicHistory', 'eligibilityCheck'));
+    }
+
+    /**
+     * Verify and approve old student for next academic year
+     */
+    public function verifyOldStudent(Request $request, $id)
     {
         $admin = Auth::guard('admin')->user();
 
@@ -106,177 +158,218 @@ class HaaController extends Controller
         }
 
         $request->validate([
-            'priority_department' => 'required|string|max:255'
+            'verification_status' => 'required|in:approved,rejected,pending',
+            'remarks' => 'nullable|string|max:1000',
+            'conditions' => 'nullable|array',
+            'next_year_gpa_requirement' => 'nullable|numeric|min:2|max:4',
+            'required_subjects' => 'nullable|array',
         ]);
 
         $application = Application::findOrFail($id);
 
+        if ($application->application_type !== 'old') {
+            return redirect()->back()->with('error', 'This is not an old student application.');
+        }
+
         if ($application->status !== 'payment_verified') {
-            return redirect()->back()->with('error', 'Application is not ready for department assignment. Payment must be verified first.');
+            return redirect()->back()->with('error', 'Application is not ready for academic verification.');
         }
 
         DB::beginTransaction();
 
         try {
-            $assignedDepartment = $request->priority_department;
+            if ($request->verification_status === 'approved') {
+                // Verify academic eligibility
+                if (!$this->checkAcademicEligibility($application->student_original_id, $application->current_year)) {
+                    return redirect()->back()->with('error', 'Student has not passed the previous academic year.');
+                }
 
-            // Generate student ID and password
-            $studentId = $this->generateStudentId();
-            $password = Str::random(12);
+                // Update application with academic approval
+                $application->update([
+                    'status' => 'academic_approved',
+                    'academic_approval_status' => 'approved',
+                    'academic_verified_by' => $admin->id,
+                    'academic_verified_at' => now(),
+                    'verification_remarks' => $request->remarks,
+                    'conditions' => $request->conditions ? json_encode($request->conditions) : null,
+                    'next_year_gpa_requirement' => $request->next_year_gpa_requirement,
+                    'required_subjects' => $request->required_subjects ? json_encode($request->required_subjects) : null,
+                    'needs_academic_approval' => false,
+                ]);
 
-            Log::info('Creating student account during quick assign', [
-                'application_id' => $application->id,
-                'student_id' => $studentId,
-                'assigned_department' => $assignedDepartment
-            ]);
+                // Update student record for next academic year
+                $student = Student::find($application->student_original_id);
+                if ($student) {
+                    $student->update([
+                        'current_year' => $this->getYearName($application->current_year),
+                        'academic_year' => $this->getNextAcademicYear($student->academic_year),
+                        'status' => 'active',
+                    ]);
 
-            // Update application with assigned department AND academic approval
-            $application->update([
-                'assigned_department' => $assignedDepartment,
-                'status' => 'academic_approved',
-                'department_assigned_by' => $admin->id,
-                'department_assigned_at' => now(),
-                'academic_approved_by' => $admin->id,
-                'academic_approved_at' => now(),
-                'student_id' => $studentId,
-            ]);
+                    // Create academic history record for the previous year
+                    StudentAcademicHistory::create([
+                        'student_id' => $student->id,
+                        'academic_year' => $student->academic_year,
+                        'year' => $application->current_year - 1,
+                        'status' => 'passed',
+                        'cgpa' => $application->cgpa,
+                        'approved_by' => $admin->id,
+                        'approved_at' => now(),
+                    ]);
+                }
 
-            // Create student record
-            $student = Student::create([
-                'student_id' => $studentId,
-                'application_id' => $application->id,
-                'name' => $application->name,
-                'email' => $application->email,
-                'phone' => $application->phone,
-                'password' => Hash::make($password),
-                'department' => $assignedDepartment,
-                'date_of_birth' => $application->date_of_birth,
-                'gender' => $application->gender,
-                'nrc_number' => $application->nrc_number,
-                'address' => $application->address,
-                'status' => 'active',
-                'registration_date' => now(),
-                'academic_year' => date('Y'),
-            ]);
+                // Send approval notification
+                $this->sendOldStudentApprovalEmail($application, $student);
 
-            // Send student credentials email
-            $emailSent = $this->sendStudentCredentialsEmail($student, $password, $assignedDepartment);
+                DB::commit();
 
-            DB::commit();
+                return redirect()->route('admin.old-student.applications')->with('success', 
+                    'Old student application academically approved! Student can now proceed to next academic year.');
 
-            if ($emailSent) {
-                return redirect()->route('admin.applications.academic')->with('success', 
-                    "Application approved! Department {$assignedDepartment} assigned and student account created. " .
-                    "Student ID: {$studentId}. Credentials sent to student email."
-                );
+            } elseif ($request->verification_status === 'rejected') {
+                $application->update([
+                    'status' => 'rejected',
+                    'academic_approval_status' => 'rejected',
+                    'rejection_reason' => $request->remarks,
+                    'rejected_by' => $admin->id,
+                    'rejected_at' => now(),
+                    'needs_academic_approval' => false,
+                ]);
+
+                DB::commit();
+
+                return redirect()->route('admin.old-student.applications')->with('success', 
+                    'Old student application rejected.');
+
             } else {
-                return redirect()->route('admin.applications.academic')->with('warning', 
-                    "Application approved but failed to send email. " .
-                    "Department: {$assignedDepartment}, Student ID: {$studentId}. Please contact the student directly."
-                );
+                // Pending with conditions
+                $application->update([
+                    'academic_approval_status' => 'pending',
+                    'verification_remarks' => $request->remarks,
+                    'conditions' => $request->conditions ? json_encode($request->conditions) : null,
+                ]);
+
+                DB::commit();
+
+                return redirect()->back()->with('info', 
+                    'Application marked as pending. Additional conditions have been noted.');
             }
 
         } catch (\Exception $e) {
             DB::rollBack();
-            Log::error('Quick department assignment and approval failed: ' . $e->getMessage());
-            return redirect()->back()->with('error', 'Department assignment and approval failed: ' . $e->getMessage());
+            Log::error('Old student verification failed: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Verification failed: ' . $e->getMessage());
         }
     }
 
     /**
-     * Assign custom department AND approve application (create student account)
-     */
-    public function assignDepartment(Request $request, $id)
-    {
-        $admin = Auth::guard('admin')->user();
+ * Quick assign department AND approve new student application
+ */
+public function quickAssign(Request $request, $id)
+{
+    $admin = Auth::guard('admin')->user();
 
-        if ($admin->role !== 'haa_admin') {
-            abort(403, 'Access denied. Academic admin only.');
-        }
+    if ($admin->role !== 'haa_admin') {
+        abort(403, 'Access denied. Academic admin only.');
+    }
 
-        $request->validate([
-            'assigned_department' => 'required|string|max:255'
+    $request->validate([
+        'priority_department' => 'required|string|max:255'
+    ]);
+
+    $application = Application::findOrFail($id);
+
+    if ($application->application_type !== 'new') {
+        return redirect()->back()->with('error', 'This method is for new students only.');
+    }
+
+    if ($application->status !== 'payment_verified') {
+        return redirect()->back()->with('error', 'Application is not ready for department assignment. Payment must be verified first.');
+    }
+
+    DB::beginTransaction();
+
+    try {
+        $assignedDepartment = $request->priority_department;
+
+        // Generate student ID and password
+        $studentId = $this->generateStudentId();
+        $password = Str::random(12);
+
+        Log::info('Creating new student account during quick assign', [
+            'application_id' => $application->id,
+            'student_id' => $studentId,
+            'assigned_department' => $assignedDepartment
         ]);
 
-        $application = Application::findOrFail($id);
+        // Update application with assigned department AND academic approval
+        $application->update([
+            'assigned_department' => $assignedDepartment,
+            'status' => 'academic_approved',
+            'department_assigned_by' => $admin->id,
+            'department_assigned_at' => now(),
+            'academic_approved_by' => $admin->id,
+            'academic_approved_at' => now(),
+            'student_id' => $studentId,
+        ]);
 
-        if ($application->status !== 'payment_verified') {
-            return redirect()->back()->with('error', 'Application is not ready for department assignment. Payment must be verified first.');
-        }
+        // Create student record with only existing columns
+        $studentData = [
+            'student_id' => $studentId,
+            'application_id' => $application->id,
+            'name' => $application->name,
+            'email' => $application->email,
+            'phone' => $application->phone,
+            'password' => Hash::make($password),
+            'department' => $assignedDepartment,
+            'date_of_birth' => $application->date_of_birth,
+            'gender' => $application->gender,
+            'nrc_number' => $application->nrc_number,
+            'address' => $application->address,
+            'academic_year' => $this->getCurrentAcademicYear(),
+            'status' => 'active',
+            'registration_date' => now(),
+            'needs_password_change' => true, // Force password change on first login
+        ];
 
-        DB::beginTransaction();
-
+        // Add current_year only after we add the column to database
+        // For now, we'll add it if the column exists
         try {
-            $assignedDepartment = $request->assigned_department;
-
-            // Generate student ID and password
-            $studentId = $this->generateStudentId();
-            $password = Str::random(12);
-
-            Log::info('Creating student account during custom department assignment', [
-                'application_id' => $application->id,
-                'student_id' => $studentId,
-                'assigned_department' => $assignedDepartment
-            ]);
-
-            // Update application with assigned department AND academic approval
-            $application->update([
-                'assigned_department' => $assignedDepartment,
-                'status' => 'academic_approved',
-                'department_assigned_by' => $admin->id,
-                'department_assigned_at' => now(),
-                'academic_approved_by' => $admin->id,
-                'academic_approved_at' => now(),
-                'student_id' => $studentId,
-            ]);
-
-            // Create student record
-            $student = Student::create([
-                'student_id' => $studentId,
-                'application_id' => $application->id,
-                'name' => $application->name,
-                'email' => $application->email,
-                'phone' => $application->phone,
-                'password' => Hash::make($password),
-                'department' => $assignedDepartment,
-                'date_of_birth' => $application->date_of_birth,
-                'gender' => $application->gender,
-                'nrc_number' => $application->nrc_number,
-                'address' => $application->address,
-                'status' => 'active',
-                'registration_date' => now(),
-                'academic_year' => date('Y'),
-            ]);
-
-            // Send student credentials email
-            $emailSent = $this->sendStudentCredentialsEmail($student, $password, $assignedDepartment);
-
-            DB::commit();
-
-            if ($emailSent) {
-                return redirect()->route('admin.applications.academic')->with('success', 
-                    "Application approved! Department {$assignedDepartment} assigned and student account created. " .
-                    "Student ID: {$studentId}. Credentials sent to student email."
-                );
-            } else {
-                return redirect()->route('admin.applications.academic')->with('warning', 
-                    "Application approved but failed to send email. " .
-                    "Department: {$assignedDepartment}, Student ID: {$studentId}. Please contact the student directly."
-                );
-            }
-
+            $studentData['current_year'] = 'first_year';
         } catch (\Exception $e) {
-            DB::rollBack();
-            Log::error('Custom department assignment and approval failed: ' . $e->getMessage());
-            return redirect()->back()->with('error', 'Department assignment and approval failed: ' . $e->getMessage());
+            // Column doesn't exist, skip it
+            Log::warning('current_year column not found in students table');
         }
+
+        $student = Student::create($studentData);
+
+        // Send student credentials email
+        $emailSent = $this->sendStudentCredentialsEmail($student, $password, $assignedDepartment);
+
+        DB::commit();
+
+        if ($emailSent) {
+            return redirect()->route('admin.applications.academic')->with('success', 
+                "Application approved! Department {$assignedDepartment} assigned and student account created. " .
+                "Student ID: {$studentId}. Credentials sent to student email."
+            );
+        } else {
+            return redirect()->route('admin.applications.academic')->with('warning', 
+                "Application approved but failed to send email. " .
+                "Department: {$assignedDepartment}, Student ID: {$studentId}. Please contact the student directly."
+            );
+        }
+
+    } catch (\Exception $e) {
+        DB::rollBack();
+        Log::error('Quick department assignment and approval failed: ' . $e->getMessage());
+        return redirect()->back()->with('error', 'Department assignment and approval failed: ' . $e->getMessage());
     }
+}
 
     /**
-     * Separate academic approval for already assigned departments
+     * Separate academic approval for already assigned departments (new students)
      */
-=======
->>>>>>> 804ca6b01de22ecd4261ad52d2b3976e1dca103c
     public function academicApprove($id)
     {
         $admin = Auth::guard('admin')->user();
@@ -287,7 +380,10 @@ class HaaController extends Controller
 
         $application = Application::findOrFail($id);
 
-<<<<<<< HEAD
+        if ($application->application_type !== 'new') {
+            return redirect()->back()->with('error', 'This method is for new students only.');
+        }
+
         // Check if department is assigned
         if (!$application->assigned_department) {
             return redirect()->back()->with('error', 'Please assign a department before approving the application.');
@@ -303,25 +399,14 @@ class HaaController extends Controller
         try {
             $assignedDepartment = $application->assigned_department;
 
-=======
-        if ($application->status !== 'payment_verified') {
-            return redirect()->back()->with('error', 'Application is not ready for academic approval. Payment must be verified first.');
-        }
-
-        try {
->>>>>>> 804ca6b01de22ecd4261ad52d2b3976e1dca103c
             // Generate student ID and password
             $studentId = $this->generateStudentId();
             $password = Str::random(12);
 
-            Log::info('Creating student account during academic approval', [
+            Log::info('Creating new student account during academic approval', [
                 'application_id' => $application->id,
-<<<<<<< HEAD
                 'student_id' => $studentId,
                 'assigned_department' => $assignedDepartment
-=======
-                'student_id' => $studentId
->>>>>>> 804ca6b01de22ecd4261ad52d2b3976e1dca103c
             ]);
 
             // Create student record
@@ -332,38 +417,26 @@ class HaaController extends Controller
                 'email' => $application->email,
                 'phone' => $application->phone,
                 'password' => Hash::make($password),
-<<<<<<< HEAD
                 'department' => $assignedDepartment,
-=======
-                'department' => $application->department,
->>>>>>> 804ca6b01de22ecd4261ad52d2b3976e1dca103c
                 'date_of_birth' => $application->date_of_birth,
                 'gender' => $application->gender,
                 'nrc_number' => $application->nrc_number,
                 'address' => $application->address,
-<<<<<<< HEAD
+                'current_year' => 'first_year',
+                'academic_year' => $this->getCurrentAcademicYear(),
                 'status' => 'active',
-=======
-                'status' => 'pending', // Set to pending until HOD approval
->>>>>>> 804ca6b01de22ecd4261ad52d2b3976e1dca103c
                 'registration_date' => now(),
-                'academic_year' => date('Y'),
             ]);
 
             // Update application with academic approval and student ID
             $application->update([
-<<<<<<< HEAD
                 'status' => 'academic_approved',
-=======
-                'status' => 'academic_approved', // Ready for HOD approval
->>>>>>> 804ca6b01de22ecd4261ad52d2b3976e1dca103c
                 'academic_approved_by' => $admin->id,
                 'academic_approved_at' => now(),
                 'student_id' => $studentId,
             ]);
 
             // Send student credentials email
-<<<<<<< HEAD
             $emailSent = $this->sendStudentCredentialsEmail($student, $password, $assignedDepartment);
 
             DB::commit();
@@ -382,41 +455,142 @@ class HaaController extends Controller
 
         } catch (\Exception $e) {
             DB::rollBack();
-=======
-            $emailSent = $this->sendStudentCredentialsEmail($student, $password);
-
-            if ($emailSent) {
-                Log::info('Student credentials email sent successfully', [
-                    'student_id' => $studentId,
-                    'email' => $student->email
-                ]);
-                return redirect()->back()->with('success', 'Application academically approved! Student account created and credentials sent to email. Student ID: ' . $studentId . ' - Now waiting for HOD final approval.');
-            } else {
-                Log::error('Failed to send student credentials email', [
-                    'student_id' => $studentId,
-                    'email' => $student->email
-                ]);
-                return redirect()->back()->with('warning', 'Application academically approved but failed to send email. Student ID: ' . $studentId . '. Please contact the student directly.');
-            }
-        } catch (\Exception $e) {
->>>>>>> 804ca6b01de22ecd4261ad52d2b3976e1dca103c
             Log::error('Academic approval failed: ' . $e->getMessage());
             return redirect()->back()->with('error', 'Academic approval failed: ' . $e->getMessage());
         }
     }
 
     /**
-<<<<<<< HEAD
-=======
-     * Quick approve - academic approval with student creation and email
+     * Academic reject for both new and old students
      */
-    public function quickApprove($id)
+    public function academicReject(Request $request, $id)
     {
-        return $this->academicApprove($id);
+        $admin = Auth::guard('admin')->user();
+
+        if ($admin->role !== 'haa_admin') {
+            abort(403, 'Access denied. Academic admin only.');
+        }
+
+        $request->validate([
+            'notes' => 'required|string|max:500'
+        ]);
+
+        $application = Application::findOrFail($id);
+
+        if (!in_array($application->status, ['payment_verified', 'department_assigned'])) {
+            return redirect()->back()->with('error', 'Application is not in correct status for rejection.');
+        }
+
+        $application->update([
+            'status' => 'rejected',
+            'rejection_reason' => $request->notes,
+            'rejected_by' => $admin->id,
+            'rejected_at' => now(),
+        ]);
+
+        return redirect()->route('admin.applications.academic')->with('success', 'Application rejected successfully.');
     }
 
     /**
->>>>>>> 804ca6b01de22ecd4261ad52d2b3976e1dca103c
+     * Helper Methods
+     */
+
+    /**
+     * Check if student has passed previous academic year
+     */
+    private function checkAcademicEligibility($studentId, $nextYear)
+    {
+        try {
+            $currentYear = $nextYear - 1;
+            
+            if ($currentYear < 1) {
+                return true; // First year students (no previous year)
+            }
+
+            // Check academic history
+            $academicRecord = StudentAcademicHistory::where('student_id', $studentId)
+                ->where('year', $currentYear)
+                ->where('status', 'passed')
+                ->first();
+
+            if ($academicRecord) {
+                return true;
+            }
+
+            // Check if student exists and has current year data
+            $student = Student::find($studentId);
+            if ($student) {
+                // For first year to second year transition, check if student is active
+                if ($currentYear == 1 && $student->status === 'active') {
+                    return true;
+                }
+            }
+
+            return false;
+
+        } catch (\Exception $e) {
+            Log::error('Academic eligibility check failed: ' . $e->getMessage());
+            return false;
+        }
+    }
+
+    /**
+     * Get student academic history
+     */
+    private function getStudentAcademicHistory($studentId)
+    {
+        return StudentAcademicHistory::where('student_id', $studentId)
+            ->orderBy('academic_year', 'desc')
+            ->orderBy('year', 'desc')
+            ->get();
+    }
+
+    /**
+     * Get current academic year
+     */
+    private function getCurrentAcademicYear()
+    {
+        $currentYear = date('Y');
+        $nextYear = $currentYear + 1;
+        return $currentYear . '-' . $nextYear;
+    }
+
+    /**
+     * Get next academic year
+     */
+    private function getNextAcademicYear($currentAcademicYear)
+    {
+        if (!$currentAcademicYear) {
+            return $this->getCurrentAcademicYear();
+        }
+
+        $parts = explode('-', $currentAcademicYear);
+        if (count($parts) === 2) {
+            $nextStart = intval($parts[1]);
+            $nextEnd = $nextStart + 1;
+            return $nextStart . '-' . $nextEnd;
+        }
+
+        return $this->getCurrentAcademicYear();
+    }
+
+    /**
+     * Get year name from number
+     */
+    private function getYearName($yearNumber)
+    {
+        $yearNames = [
+            1 => 'first_year',
+            2 => 'second_year',
+            3 => 'third_year',
+            4 => 'fourth_year',
+            5 => 'fifth_year',
+        ];
+
+        return $yearNames[$yearNumber] ?? 'first_year';
+    }
+
+    /**
      * Generate student ID in WYTU202500001 format
      */
     private function generateStudentId()
@@ -439,7 +613,6 @@ class HaaController extends Controller
     }
 
     /**
-<<<<<<< HEAD
      * Get all available departments
      */
     private function getAllDepartments()
@@ -461,47 +634,19 @@ class HaaController extends Controller
     }
 
     /**
-     * Send student credentials email
+     * Send student credentials email (for new students)
      */
     private function sendStudentCredentialsEmail($student, $password, $department)
-=======
-     * Send student credentials email
-     */
-    private function sendStudentCredentialsEmail($student, $password)
->>>>>>> 804ca6b01de22ecd4261ad52d2b3976e1dca103c
     {
         try {
-            Log::info('Attempting to send student credentials email', [
-                'student_id' => $student->student_id,
-<<<<<<< HEAD
-                'email' => $student->email,
-                'department' => $department
-=======
-                'email' => $student->email
->>>>>>> 804ca6b01de22ecd4261ad52d2b3976e1dca103c
-            ]);
-
             Mail::send('emails.student-credentials', [
                 'student' => $student,
                 'password' => $password,
-<<<<<<< HEAD
                 'department' => $department,
                 'loginUrl' => route('student.login'),
             ], function ($message) use ($student, $department) {
                 $message->to($student->email)
                     ->subject("Your Student Account Credentials - WYTU University - {$department}");
-=======
-                'loginUrl' => route('student.login'),
-                'status' => 'pending' // Inform student that HOD approval is pending
-            ], function ($message) use ($student) {
-                $message->to($student->email)
-                    ->subject('Your Student Account Credentials - WYTU University - Pending Final Approval');
-
-                Log::info('Email prepared for sending', [
-                    'to' => $student->email,
-                    'subject' => 'Your Student Account Credentials - WYTU University - Pending Final Approval'
-                ]);
->>>>>>> 804ca6b01de22ecd4261ad52d2b3976e1dca103c
             });
 
             Log::info('Student credentials email sent successfully', [
@@ -510,48 +655,32 @@ class HaaController extends Controller
 
             return true;
         } catch (\Exception $e) {
-            Log::error('Failed to send student credentials email: ' . $e->getMessage(), [
-                'student_id' => $student->student_id,
-                'error' => $e->getMessage()
-            ]);
+            Log::error('Failed to send student credentials email: ' . $e->getMessage());
             return false;
         }
     }
 
-    public function academicReject(Request $request, $id)
+    /**
+     * Send old student approval email
+     */
+    private function sendOldStudentApprovalEmail($application, $student)
     {
-        $admin = Auth::guard('admin')->user();
+        try {
+            Mail::send('emails.old-student-approval', [
+                'application' => $application,
+                'student' => $student,
+                'nextYear' => $application->current_year,
+                'academicYear' => $this->getNextAcademicYear($student->academic_year),
+            ], function ($message) use ($student) {
+                $message->to($student->email)
+                    ->subject("Academic Year Progression Approved - WYTU University");
+            });
 
-        if ($admin->role !== 'haa_admin') {
-            abort(403, 'Access denied. Academic admin only.');
+            return true;
+        } catch (\Exception $e) {
+            Log::error('Failed to send old student approval email: ' . $e->getMessage());
+            return false;
         }
-
-        $request->validate([
-            'notes' => 'required|string|max:500'
-        ]);
-
-        $application = Application::findOrFail($id);
-
-<<<<<<< HEAD
-        if (!in_array($application->status, ['payment_verified', 'department_assigned'])) {
-=======
-        if ($application->status !== 'payment_verified') {
->>>>>>> 804ca6b01de22ecd4261ad52d2b3976e1dca103c
-            return redirect()->back()->with('error', 'Application is not in correct status for rejection.');
-        }
-
-        $application->update([
-            'status' => 'rejected',
-            'rejection_reason' => $request->notes,
-            'rejected_by' => $admin->id,
-            'rejected_at' => now(),
-        ]);
-
-<<<<<<< HEAD
-        return redirect()->route('admin.applications.academic')->with('success', 'Application rejected successfully.');
-=======
-        return redirect()->back()->with('success', 'Application rejected successfully.');
->>>>>>> 804ca6b01de22ecd4261ad52d2b3976e1dca103c
     }
 
     public function academicAffairs()
@@ -559,22 +688,15 @@ class HaaController extends Controller
         return view('admin.academic.affairs');
     }
 
-<<<<<<< HEAD
     public function courseManagement()
     {
         return view('admin.academic.course-management');
     }
 
     /**
-     * View assigned applications ready for approval
+     * View assigned applications ready for approval (new students)
      */
     public function assignedApplications()
-=======
-    /**
-     * View application details
-     */
-    public function viewApplication($id)
->>>>>>> 804ca6b01de22ecd4261ad52d2b3976e1dca103c
     {
         $admin = Auth::guard('admin')->user();
 
@@ -582,9 +704,9 @@ class HaaController extends Controller
             abort(403, 'Access denied. Academic admin only.');
         }
 
-<<<<<<< HEAD
-        // Get applications that have departments assigned but not approved
-        $applications = Application::where('status', 'department_assigned')
+        // Get new student applications that have departments assigned but not approved
+        $applications = Application::where('application_type', 'new')
+            ->where('status', 'department_assigned')
             ->whereNotNull('assigned_department')
             ->orderBy('department_assigned_at', 'desc')
             ->paginate(20);
@@ -592,9 +714,3 @@ class HaaController extends Controller
         return view('admin.academic.assigned-applications', compact('applications', 'admin'));
     }
 }
-=======
-        $application = Application::with(['payments'])->findOrFail($id);
-        return view('admin.academic.application-view', compact('application', 'admin'));
-    }
-}
->>>>>>> 804ca6b01de22ecd4261ad52d2b3976e1dca103c

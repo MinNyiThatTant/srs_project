@@ -14,74 +14,81 @@ class Application extends Model
         'name',
         'email',
         'phone',
+        'nrc_number',
         'father_name',
         'mother_name',
         'date_of_birth',
         'gender',
         'nationality',
-        'nrc_number',
         'address',
         'application_type',
         'student_type',
-        'existing_student_id',
-        
-        // Department fields
-        'department', // Keep for backward compatibility
         'first_priority_department',
         'second_priority_department',
         'third_priority_department',
         'fourth_priority_department',
         'fifth_priority_department',
+        'department',
         'assigned_department',
-        
-        // Educational background
         'high_school_name',
         'high_school_address',
         'graduation_year',
         'matriculation_score',
         'previous_qualification',
-        'student_id',
+        'existing_student_id',
+        'student_original_id',
+        'academic_year',
         'current_year',
+        'next_academic_year',
         'application_purpose',
         'reason_for_application',
-        'reason_for_continuation',
         'cgpa',
-        'academic_standing',
+        'previous_year_status',
+        'academic_history',
         'status',
-        'application_date',
-        'approved_at',
-        'approved_by',
-        'notes',
         'payment_status',
-        'payment_verified_by',
-        'payment_verified_at',
+        'payment_amount',
+        'needs_academic_approval',
+        'academic_approval_status',
+        'academic_verified_by',
+        'academic_verified_at',
+        'verification_remarks',
+        'conditions',
+        'next_year_gpa_requirement',
+        'required_subjects',
+        'department_assigned_by',
+        'department_assigned_at',
         'academic_approved_by',
         'academic_approved_at',
         'final_approved_by',
         'final_approved_at',
-        'department_assigned_by', 
-        'department_assigned_at', 
-        'rejection_reason',
+        'payment_verified_by',
+        'payment_verified_at',
         'rejected_by',
         'rejected_at',
-        'password',
-        'gateway_response'
+        'rejection_reason',
+        'student_id',
+        'submitted_at',
+        'terms_accepted',
+        'declaration_accepted',
     ];
 
     protected $casts = [
+        'academic_history' => 'array',
+        'conditions' => 'array',
+        'required_subjects' => 'array',
         'date_of_birth' => 'date',
-        'application_date' => 'datetime',
-        'approved_at' => 'datetime',
-        'payment_verified_at' => 'datetime',
+        'submitted_at' => 'datetime',
+        'academic_verified_at' => 'datetime',
+        'department_assigned_at' => 'datetime',
         'academic_approved_at' => 'datetime',
         'final_approved_at' => 'datetime',
-        'department_assigned_at' => 'datetime', 
+        'payment_verified_at' => 'datetime',
         'rejected_at' => 'datetime',
-        'graduation_year' => 'integer',
-        'matriculation_score' => 'decimal:2',
-        'current_year' => 'integer',
-        'gateway_response' => 'array',
-        'cgpa' => 'decimal:2'
+        'needs_academic_approval' => 'boolean',
+        'terms_accepted' => 'boolean',
+        'declaration_accepted' => 'boolean',
+        'payment_amount' => 'decimal:2',
     ];
 
     // Status constants
@@ -101,16 +108,44 @@ class Application extends Model
     // Application types
     const TYPE_NEW = 'new';
     const TYPE_OLD = 'old';
-    const TYPE_EXISTING = 'existing';
 
     // Student types
     const STUDENT_FRESHMAN = 'freshman';
     const STUDENT_CONTINUING = 'continuing';
 
+    // Academic approval status
+    const ACADEMIC_PENDING = 'pending';
+    const ACADEMIC_APPROVED = 'approved';
+    const ACADEMIC_REJECTED = 'rejected';
+
     // Relationships
     public function payments()
     {
         return $this->hasMany(Payment::class);
+    }
+
+    /**
+     * Relationship with Student (for old students)
+     */
+    public function studentRecord()
+    {
+        return $this->belongsTo(Student::class, 'student_original_id');
+    }
+
+    /**
+     * Relationship with Admin (Academic Verifier)
+     */
+    public function academicVerifier()
+    {
+        return $this->belongsTo(Admin::class, 'academic_verified_by');
+    }
+
+    /**
+     * Relationship with Admin (Department Assigner)
+     */
+    public function departmentAssigner()
+    {
+        return $this->belongsTo(Admin::class, 'department_assigned_by');
     }
 
     public function student()
@@ -124,6 +159,22 @@ class Application extends Model
     }
 
     // Scopes
+    public function scopeNewStudents($query)
+    {
+        return $query->where('application_type', self::TYPE_NEW);
+    }
+
+    public function scopeOldStudents($query)
+    {
+        return $query->where('application_type', self::TYPE_OLD);
+    }
+
+    public function scopeNeedsAcademicApproval($query)
+    {
+        return $query->where('needs_academic_approval', true)
+                    ->where('academic_approval_status', self::ACADEMIC_PENDING);
+    }
+
     public function scopePendingPayment($query)
     {
         return $query->where('payment_status', self::PAYMENT_PENDING)
@@ -173,14 +224,9 @@ class Application extends Model
         return $query->where('status', self::STATUS_REJECTED);
     }
 
-    public function scopeNewApplications($query)
+    public function scopeAcademicPending($query)
     {
-        return $query->where('application_type', self::TYPE_NEW);
-    }
-
-    public function scopeExistingApplications($query)
-    {
-        return $query->where('application_type', self::TYPE_EXISTING);
+        return $query->where('academic_approval_status', self::ACADEMIC_PENDING);
     }
 
     // Methods
@@ -212,7 +258,15 @@ class Application extends Model
      */
     public static function studentIdExists($studentId, $excludeId = null)
     {
-        $query = static::where('existing_student_id', $studentId);
+        $query = static::where('existing_student_id', $studentId)
+            ->whereIn('status', [
+                self::STATUS_PENDING,
+                self::STATUS_PAYMENT_PENDING,
+                self::STATUS_PAYMENT_VERIFIED,
+                self::STATUS_DEPARTMENT_ASSIGNED,
+                self::STATUS_ACADEMIC_APPROVED,
+                self::STATUS_APPROVED
+            ]);
 
         if ($excludeId) {
             $query->where('id', '!=', $excludeId);
@@ -254,7 +308,8 @@ class Application extends Model
         $this->update([
             'status' => self::STATUS_ACADEMIC_APPROVED,
             'academic_approved_by' => $approvedBy,
-            'academic_approved_at' => now()
+            'academic_approved_at' => now(),
+            'academic_approval_status' => self::ACADEMIC_APPROVED,
         ]);
     }
 
@@ -286,7 +341,8 @@ class Application extends Model
             'status' => self::STATUS_REJECTED,
             'rejection_reason' => $reason,
             'rejected_by' => $rejectedBy,
-            'rejected_at' => now()
+            'rejected_at' => now(),
+            'academic_approval_status' => self::ACADEMIC_REJECTED,
         ]);
     }
 
@@ -358,30 +414,16 @@ class Application extends Model
     public function getStatusBadgeAttribute()
     {
         $statusClasses = [
-            self::STATUS_PENDING => 'bg-warning',
-            self::STATUS_PAYMENT_PENDING => 'bg-warning',
-            self::STATUS_PAYMENT_VERIFIED => 'bg-info',
-            self::STATUS_DEPARTMENT_ASSIGNED => 'bg-primary',
-            self::STATUS_ACADEMIC_APPROVED => 'bg-primary',
-            self::STATUS_APPROVED => 'bg-success',
-            self::STATUS_REJECTED => 'bg-danger',
+            self::STATUS_PENDING => 'badge bg-warning',
+            self::STATUS_PAYMENT_PENDING => 'badge bg-secondary',
+            self::STATUS_PAYMENT_VERIFIED => 'badge bg-info',
+            self::STATUS_DEPARTMENT_ASSIGNED => 'badge bg-primary',
+            self::STATUS_ACADEMIC_APPROVED => 'badge bg-success',
+            self::STATUS_APPROVED => 'badge bg-success',
+            self::STATUS_REJECTED => 'badge bg-danger',
         ];
 
-        return $statusClasses[$this->status] ?? 'bg-secondary';
-    }
-
-    /**
-     * Get payment status badge class for Bootstrap
-     */
-    public function getPaymentStatusBadgeAttribute()
-    {
-        $statuses = [
-            self::PAYMENT_PENDING => 'bg-warning',
-            self::PAYMENT_COMPLETED => 'bg-info',
-            self::PAYMENT_VERIFIED => 'bg-success',
-        ];
-
-        return $statuses[$this->payment_status] ?? 'bg-secondary';
+        return $statusClasses[$this->status] ?? 'badge bg-secondary';
     }
 
     /**
@@ -417,11 +459,39 @@ class Application extends Model
     }
 
     /**
+     * Get academic approval status text
+     */
+    public function getAcademicApprovalStatusTextAttribute()
+    {
+        $statusTexts = [
+            self::ACADEMIC_PENDING => 'Pending',
+            self::ACADEMIC_APPROVED => 'Approved',
+            self::ACADEMIC_REJECTED => 'Rejected',
+        ];
+
+        return $statusTexts[$this->academic_approval_status] ?? 'Unknown';
+    }
+
+    /**
+     * Get academic approval status badge
+     */
+    public function getAcademicApprovalStatusBadgeAttribute()
+    {
+        $badges = [
+            self::ACADEMIC_PENDING => 'badge bg-warning',
+            self::ACADEMIC_APPROVED => 'badge bg-success',
+            self::ACADEMIC_REJECTED => 'badge bg-danger',
+        ];
+
+        return $badges[$this->academic_approval_status] ?? 'badge bg-secondary';
+    }
+
+    /**
      * Get formatted application ID
      */
     public function getFormattedApplicationIdAttribute()
     {
-        return $this->application_id ?: 'WYTU-' . str_pad($this->id, 6, '0', STR_PAD_LEFT);
+        return $this->application_id ?: 'APP-' . str_pad($this->id, 6, '0', STR_PAD_LEFT);
     }
 
     /**
@@ -429,7 +499,7 @@ class Application extends Model
      */
     public function getFormattedApplicationDateAttribute()
     {
-        return $this->application_date ? $this->application_date->format('M d, Y H:i') : 'N/A';
+        return $this->created_at ? $this->created_at->format('M d, Y H:i') : 'N/A';
     }
 
     /**
@@ -446,7 +516,9 @@ class Application extends Model
      */
     public function readyForAcademicApproval()
     {
-        return $this->status === self::STATUS_PAYMENT_VERIFIED;
+        return $this->status === self::STATUS_PAYMENT_VERIFIED && 
+               $this->needs_academic_approval &&
+               $this->academic_approval_status === self::ACADEMIC_PENDING;
     }
 
     /**
@@ -454,7 +526,7 @@ class Application extends Model
      */
     public function isDepartmentAssigned()
     {
-        return $this->status === self::STATUS_DEPARTMENT_ASSIGNED;
+        return $this->status === self::STATUS_DEPARTMENT_ASSIGNED && !empty($this->assigned_department);
     }
 
     /**
@@ -522,8 +594,7 @@ class Application extends Model
     {
         $types = [
             self::TYPE_NEW => 'New Student',
-            self::TYPE_OLD => 'Old Student',
-            self::TYPE_EXISTING => 'Existing Student',
+            self::TYPE_OLD => 'Existing Student',
         ];
 
         return $types[$this->application_type] ?? 'Unknown';
@@ -543,6 +614,48 @@ class Application extends Model
     }
 
     /**
+     * Get formatted payment amount
+     */
+    public function getFormattedPaymentAmountAttribute()
+    {
+        return $this->payment_amount ? number_format($this->payment_amount, 2) . ' MMK' : 'N/A';
+    }
+
+    /**
+     * Get next year name
+     */
+    public function getNextYearNameAttribute()
+    {
+        $yearNames = [
+            1 => 'First Year',
+            2 => 'Second Year',
+            3 => 'Third Year',
+            4 => 'Fourth Year',
+            5 => 'Fifth Year',
+        ];
+
+        return $yearNames[$this->current_year] ?? 'Unknown Year';
+    }
+
+    /**
+     * Get current year name
+     */
+    public function getCurrentYearNameAttribute()
+    {
+        $currentYear = $this->current_year - 1;
+        $yearNames = [
+            0 => 'First Year (Completed)',
+            1 => 'First Year',
+            2 => 'Second Year',
+            3 => 'Third Year',
+            4 => 'Fourth Year',
+            5 => 'Fifth Year',
+        ];
+
+        return $yearNames[$currentYear] ?? 'Unknown Year';
+    }
+
+    /**
      * Boot method for generating application ID
      */
     protected static function boot()
@@ -556,8 +669,8 @@ class Application extends Model
                 $model->application_id = 'APP' . $year . str_pad($count + 1, 4, '0', STR_PAD_LEFT);
             }
 
-            if (empty($model->application_date)) {
-                $model->application_date = now();
+            if (empty($model->submitted_at)) {
+                $model->submitted_at = now();
             }
 
             // Set initial status based on application type
@@ -565,22 +678,42 @@ class Application extends Model
                 if ($model->application_type === self::TYPE_NEW) {
                     $model->status = self::STATUS_PAYMENT_PENDING;
                     $model->student_type = self::STUDENT_FRESHMAN;
-                } elseif ($model->application_type === self::TYPE_EXISTING) {
+                } elseif ($model->application_type === self::TYPE_OLD) {
                     $model->status = self::STATUS_PAYMENT_PENDING;
                     $model->student_type = self::STUDENT_CONTINUING;
-                } else {
-                    $model->status = self::STATUS_PENDING;
+                    $model->needs_academic_approval = true;
+                    $model->academic_approval_status = self::ACADEMIC_PENDING;
                 }
             }
 
-            if (empty($model->payment_status) && 
-                ($model->application_type === self::TYPE_NEW || $model->application_type === self::TYPE_EXISTING)) {
+            if (empty($model->payment_status)) {
                 $model->payment_status = self::PAYMENT_PENDING;
+            }
+
+            if (empty($model->academic_approval_status) && $model->application_type === self::TYPE_OLD) {
+                $model->academic_approval_status = self::ACADEMIC_PENDING;
             }
 
             // Set department from first priority if not set
             if (empty($model->department) && !empty($model->first_priority_department)) {
                 $model->department = $model->first_priority_department;
+            }
+
+            // Set academic year if not set
+            if (empty($model->academic_year)) {
+                $currentYear = date('Y');
+                $nextYear = $currentYear + 1;
+                $model->academic_year = "{$currentYear}-{$nextYear}";
+            }
+
+            // Set next academic year for old students
+            if ($model->application_type === self::TYPE_OLD && empty($model->next_academic_year)) {
+                $parts = explode('-', $model->academic_year);
+                if (count($parts) === 2) {
+                    $nextStart = intval($parts[1]);
+                    $nextEnd = $nextStart + 1;
+                    $model->next_academic_year = "{$nextStart}-{$nextEnd}";
+                }
             }
         });
     }

@@ -58,6 +58,14 @@ Route::get('applications/{applicationId}', [ApplicationController::class, 'show'
 Route::get('applications/{applicationId}/pay', [ApplicationController::class, 'paymentPage'])->name('applications.payment');
 Route::get('applications/{applicationId}/status', [ApplicationController::class, 'checkStatus'])->name('applications.status');
 
+Route::prefix('applications')->name('applications.')->group(function () {
+    Route::get('/old-student', [ApplicationController::class, 'oldStudentForm'])->name('old.student.form');
+    Route::post('/old-student/submit', [ApplicationController::class, 'submitExistingApplication'])->name('old.submit');
+    
+});
+
+Route::post('/student/verify', [ApplicationController::class, 'verifyStudent'])->name('student.verify');
+
 // ========== PAYMENT ROUTES ==========
 
 // Payment Routes
@@ -235,6 +243,12 @@ Route::get('course-management', [HaaController::class, 'courseManagement'])->nam
 Route::post('approve-academic/{id}', [HaaController::class, 'approveAcademic'])->name('approve.academic');
 Route::get('application/view/{id}', [HaaController::class, 'viewApplication'])->name('applications.view');
 Route::post('final-approve/{id}', [HaaController::class, 'finalApprove'])->name('applications.final-approve');
+
+Route::get('/old-student-applications', [HaaController::class, 'oldStudentApplications'])->name('old-student.applications');
+Route::get('/old-application/{id}', [HaaController::class, 'viewOldApplication'])->name('old-application.view');
+Route::post('/old-application/{id}/verify', [HaaController::class, 'verifyOldStudent'])->name('old-student.verify');
+
+
 
     // ========== HOD ROUTES ==========
     Route::get('hod-dashboard', [HodController::class, 'dashboard'])->name('hod.dashboard');
@@ -623,4 +637,109 @@ Route::get('/check-students-table', function() {
     } else {
         echo "<p style='color: red;'>Students table does NOT exist</p>";
     }
+});
+
+
+
+
+
+
+
+
+// Add this debug route
+Route::get('/debug-student-date/{studentId}', function($studentId) {
+    $student = \App\Models\Student::where('student_id', $studentId)->first();
+    
+    if (!$student) {
+        return "Student not found";
+    }
+    
+    echo "<h3>Student Date of Birth Analysis:</h3>";
+    echo "Student ID: " . $student->student_id . "<br>";
+    echo "Name: " . $student->name . "<br>";
+    echo "Date of Birth (raw): " . $student->date_of_birth . "<br>";
+    echo "Date of Birth (type): " . gettype($student->date_of_birth) . "<br>";
+    
+    if ($student->date_of_birth instanceof \DateTime) {
+        echo "Date of Birth (format Y-m-d): " . $student->date_of_birth->format('Y-m-d') . "<br>";
+        echo "Date of Birth (format d-m-Y): " . $student->date_of_birth->format('d-m-Y') . "<br>";
+        echo "Date of Birth (format Y/m/d): " . $student->date_of_birth->format('Y/m/d') . "<br>";
+    } else {
+        echo "Date of Birth (string): " . (string)$student->date_of_birth . "<br>";
+    }
+    
+    echo "<h3>Database Column Type:</h3>";
+    $columnType = \DB::select("SHOW COLUMNS FROM students WHERE Field = 'date_of_birth'");
+    echo "Column Type: " . $columnType[0]->Type . "<br>";
+    
+    return "";
+});
+
+
+
+
+
+
+
+
+
+
+
+Route::get('/test-verify/{studentId}', function($studentId) {
+    $student = \App\Models\Student::where('student_id', $studentId)->first();
+    
+    if (!$student) {
+        return response()->json(['error' => 'Student not found'], 404);
+    }
+    
+    // Test different date formats
+    $testDates = [
+        '1999-01-01', // Correct format
+        '01-01-1999', // DD-MM-YYYY
+        '01/01/1999', // DD/MM/YYYY
+        '1999/01/01', // YYYY/MM/DD
+        'Jan 1, 1999', // Text format
+    ];
+    
+    $results = [];
+    foreach ($testDates as $testDate) {
+        try {
+            $inputDate = \Carbon\Carbon::parse($testDate);
+            $studentDate = \Carbon\Carbon::parse($student->date_of_birth);
+            
+            $results[$testDate] = [
+                'input_parsed' => $inputDate->format('Y-m-d'),
+                'student_parsed' => $studentDate->format('Y-m-d'),
+                'match' => $inputDate->format('Y-m-d') === $studentDate->format('Y-m-d'),
+                'input_timestamp' => $inputDate->timestamp,
+                'student_timestamp' => $studentDate->timestamp,
+            ];
+        } catch (\Exception $e) {
+            $results[$testDate] = ['error' => $e->getMessage()];
+        }
+    }
+    
+    return response()->json([
+        'student' => [
+            'id' => $student->id,
+            'student_id' => $student->student_id,
+            'name' => $student->name,
+            'date_of_birth' => $student->date_of_birth,
+            'date_of_birth_formatted' => \Carbon\Carbon::parse($student->date_of_birth)->format('Y-m-d'),
+        ],
+        'test_results' => $results
+    ]);
+});
+
+
+
+
+// In routes/web.php, add this test route
+Route::get('/test-verification-route', function() {
+    return response()->json([
+        'route_exists' => Route::has('student.verify'),
+        'url' => route('student.verify'),
+        'method' => 'POST',
+        'csrf_token' => csrf_token()
+    ]);
 });

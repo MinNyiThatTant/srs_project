@@ -108,11 +108,7 @@
                             <tr>
                                 <th>App ID</th>
                                 <th>Name</th>
-<<<<<<< HEAD
                                 <th>Preferred Majors</th>
-=======
-                                <th>Department</th>
->>>>>>> 804ca6b01de22ecd4261ad52d2b3976e1dca103c
                                 <th>Payment Status</th>
                                 <th>Verified Date</th>
                                 <th>Actions</th>
@@ -120,19 +116,13 @@
                         </thead>
                         <tbody>
                             @foreach($applications as $application)
-<<<<<<< HEAD
                             @php
                                 $priorities = $application->getDepartmentPriorities();
                             @endphp
-=======
->>>>>>> 804ca6b01de22ecd4261ad52d2b3976e1dca103c
                             <tr>
                                 <td>
-                                    <strong>{{ $application->application_id ?? 'N/A' }}</strong>
-                                </td>
                                 <td>{{ $application->name }}</td>
                                 <td>
-<<<<<<< HEAD
                                     @foreach($priorities as $priority => $department)
                                         <span class="badge 
                                             @if($priority === 'First Priority') bg-primary
@@ -143,9 +133,6 @@
                                             {{ str_replace(' Priority', '', $priority) }}: {{ $department }}
                                         </span><br>
                                     @endforeach
-=======
-                                    <span class="badge bg-secondary">{{ $application->department }}</span>
->>>>>>> 804ca6b01de22ecd4261ad52d2b3976e1dca103c
                                 </td>
                                 <td>
                                     <span class="badge bg-success">
@@ -160,7 +147,6 @@
                                            title="View Application Details">
                                             <i class="bi bi-eye"></i>
                                         </a>
-<<<<<<< HEAD
                                         
                                         <!-- Quick Assign for each priority -->
                                         @foreach($priorities as $priority => $department)
@@ -181,24 +167,6 @@
                                             </button>
                                         </form>
                                         @endforeach
-=======
-                                        <form action="{{ route('admin.applications.academic-approve', $application->id) }}" method="POST" class="d-inline">
-                                            @csrf
-                                            <button type="submit" class="btn btn-outline-info" 
-                                                    onclick="return confirm('Grant academic approval to {{ $application->name }}?')"
-                                                    title="Academic Approval">
-                                                <i class="bi bi-check"></i> Academic
-                                            </button>
-                                        </form>
-                                        <form action="{{ route('admin.applications.final-approve', $application->id) }}" method="POST" class="d-inline">
-                                            @csrf
-                                            <button type="submit" class="btn btn-outline-success" 
-                                                    onclick="return confirm('Final approval will create student account and send credentials. Continue with {{ $application->name }}?')"
-                                                    title="Final Approval & Create Student">
-                                                <i class="bi bi-check-lg"></i> Final
-                                            </button>
-                                        </form>
->>>>>>> 804ca6b01de22ecd4261ad52d2b3976e1dca103c
                                     </div>
                                 </td>
                             </tr>
@@ -240,37 +208,23 @@
                         </div>
                     </a>
                     
-<<<<<<< HEAD
                     {{-- <a href="{{ route('admin.academic.affairs') }}" class="btn btn-outline-info btn-lg text-start">
-=======
-                    <a href="{{ route('admin.academic.affairs') }}" class="btn btn-outline-info btn-lg text-start">
->>>>>>> 804ca6b01de22ecd4261ad52d2b3976e1dca103c
                         <i class="bi bi-gear me-2"></i>
                         <div>
                             <strong>Academic Affairs</strong>
                             <br>
                             <small class="text-muted">Academic management settings</small>
                         </div>
-<<<<<<< HEAD
                     </a> --}}
                     
                     {{-- <a href="{{ route('admin.course.management') }}" class="btn btn-outline-success btn-lg text-start">
-=======
-                    </a>
-                    
-                    <a href="{{ route('admin.course.management') }}" class="btn btn-outline-success btn-lg text-start">
->>>>>>> 804ca6b01de22ecd4261ad52d2b3976e1dca103c
                         <i class="bi bi-book me-2"></i>
                         <div>
                             <strong>Course Management</strong>
                             <br>
                             <small class="text-muted">Manage courses and curriculum</small>
                         </div>
-<<<<<<< HEAD
                     </a> --}}
-=======
-                    </a>
->>>>>>> 804ca6b01de22ecd4261ad52d2b3976e1dca103c
                 </div>
             </div>
         </div>
@@ -290,19 +244,11 @@
                         <small class="text-muted">Finance admin verifies payment completion</small>
                     </div>
                     <div class="list-group-item">
-<<<<<<< HEAD
                         <h6 class="mb-1">2. Department Assignment</h6>
                         <small class="text-muted">Academic admin assigns department/major</small>
                     </div>
                     <div class="list-group-item">
                         <h6 class="mb-1">3. Academic Approval</h6>
-=======
-                        <h6 class="mb-1">2. Academic Review</h6>
-                        <small class="text-muted">Academic admin reviews application</small>
-                    </div>
-                    <div class="list-group-item">
-                        <h6 class="mb-1">3. Final Approval</h6>
->>>>>>> 804ca6b01de22ecd4261ad52d2b3976e1dca103c
                         <small class="text-muted">Create student account & send credentials</small>
                     </div>
                     <div class="list-group-item">
