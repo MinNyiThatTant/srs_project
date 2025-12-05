@@ -118,6 +118,39 @@ Route::get('/test/create-student', function () {
     }
 });
 
+
+Route::get('/test-form-submit', function() {
+    // Simulate a POST request to test
+    $response = Http::post(url('/old-student/submit'), [
+        '_token' => csrf_token(),
+        'current_year' => '2',
+        'previous_year_status' => 'passed',
+        'cgpa' => '3.5',
+        'application_purpose' => 'course_registration',
+        'phone' => '09123456789',
+        'address' => 'Test address',
+        'reason' => 'This is a test reason for continuing studies at WYTU University.',
+        'emergency_contact' => 'Emergency Person',
+        'emergency_phone' => '09123456788',
+        'declaration_accuracy' => '1',
+        'declaration_fee' => '1',
+        'declaration_rules' => '1',
+        'signature' => 'Test Student'
+    ]);
+    
+    return $response->body();
+});
+
+
+
+
+
+
+
+
+
+
+
 // ========== STUDENT PASSWORD ROUTES ==========
 Route::get('student/forgot-password', [StudentController::class, 'forgotPassword'])->name('student.forgot-password');
 Route::post('student/send-password-reset', [StudentController::class, 'sendPasswordReset'])->name('student.send.password.reset');

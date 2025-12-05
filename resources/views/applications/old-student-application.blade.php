@@ -287,6 +287,8 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
+            console.log('Page loaded - Form debugging started');
+
             // Character counter
             const reasonTextarea = document.querySelector('textarea[name="reason"]');
             const charCount = document.getElementById('charCount');
@@ -331,20 +333,26 @@
                 });
             });
 
-            // Form validation
+            // Form validation and submission
             const form = document.getElementById('applicationForm');
             const submitBtn = document.getElementById('submitBtn');
 
             if (form) {
+                console.log('Form found:', form);
+
+                // Add form submit event listener
                 form.addEventListener('submit', function(e) {
-                    // Prevent default if validation fails
-                    let isValid = true;
+                    console.log('Form submit event triggered');
+                    e.preventDefault(); // Prevent default first for debugging
 
                     // Validate CGPA
                     const cgpaInput = document.querySelector('input[name="cgpa"]');
+                    let isValid = true;
+
                     if (!validateCGPA(cgpaInput)) {
                         isValid = false;
                         alert('Please enter a valid CGPA between 0.00 and 4.00');
+                        cgpaInput.focus();
                     }
 
                     // Validate phones
@@ -352,6 +360,7 @@
                         if (!validatePhone(input)) {
                             isValid = false;
                             alert('Please enter valid 10-11 digit phone numbers');
+                            input.focus();
                         }
                     });
 
@@ -361,20 +370,98 @@
                         if (!checkbox.checked) {
                             isValid = false;
                             alert('Please accept all declarations');
+                            checkbox.focus();
                         }
                     });
 
+                    // Check reason length
+                    if (reasonTextarea && reasonTextarea.value.length < 20) {
+                        isValid = false;
+                        alert('Please provide a detailed reason (at least 20 characters)');
+                        reasonTextarea.focus();
+                    }
+
                     if (!isValid) {
-                        e.preventDefault();
+                        console.log('Form validation failed');
                         return false;
                     }
 
+                    console.log('Form validation passed, submitting...');
+
                     // Show loading
                     submitBtn.disabled = true;
+                    const originalText = submitBtn.innerHTML;
                     submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Submitting...';
 
-                    // Form will submit normally
+                    // Submit form programmatically
+                    const formData = new FormData(form);
+
+                    // Debug: Log form data
+                    console.log('Form data:', Object.fromEntries(formData));
+
+                    // Submit via fetch to see response
+                    fetch(form.action, {
+                            method: 'POST',
+                            body: formData,
+                            headers: {
+                                'X-Requested-With': 'XMLHttpRequest',
+                                'Accept': 'application/json',
+                            }
+                        })
+                        .then(response => {
+                            console.log('Response status:', response.status);
+                            console.log('Response headers:', response.headers);
+                            return response.text();
+                        })
+                        .then(text => {
+                            console.log('Response text:', text);
+
+                            // Try to parse as JSON
+                            try {
+                                const data = JSON.parse(text);
+                                console.log('Parsed JSON:', data);
+
+                                if (data.redirect) {
+                                    window.location.href = data.redirect;
+                                } else if (data.success) {
+                                    alert('Application submitted successfully!');
+                                    window.location.href = '/application/success/' + data
+                                    .application_id;
+                                } else {
+                                    alert('Error: ' + (data.message || 'Unknown error'));
+                                    submitBtn.disabled = false;
+                                    submitBtn.innerHTML = originalText;
+                                }
+                            } catch (e) {
+                                // If not JSON, it's probably an HTML response (redirect)
+                                console.log('Response is HTML, likely a redirect');
+                                // Allow default form submission
+                                form.submit();
+                            }
+                        })
+                        .catch(error => {
+                            console.error('Fetch error:', error);
+                            alert('Network error. Please try again.');
+                            submitBtn.disabled = false;
+                            submitBtn.innerHTML = originalText;
+                        });
+
+                    return false; // Prevent default submission
                 });
+
+                // Also log form action
+                console.log('Form action:', form.action);
+                console.log('Form method:', form.method);
+            } else {
+                console.error('Form not found!');
+            }
+
+            // Test if CSRF token exists
+            const csrfToken = document.querySelector('meta[name="csrf-token"]');
+            if (csrfToken) {
+                console.log('CSRF token found');
+            } else {
+                console.error('CSRF token not found!');
             }
         });
     </script>
