@@ -18,8 +18,8 @@ use App\Http\Controllers\DeptController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\LoginController;
 use App\Http\Controllers\AcademicController;
+use App\Http\Controllers\StudentController;
 use Illuminate\Support\Facades\Route;
-
 
 // ========== PUBLIC ROUTES ==========
 
@@ -48,27 +48,82 @@ Route::middleware(['guest:admin'])->group(function () {
 
 // ========== APPLICATION ROUTES ==========
 
+// New Student Application
 Route::get('new-student-apply', [ApplicationController::class, 'newStudentForm'])->name('new.student.apply');
-Route::get('old-student-apply', [ApplicationController::class, 'oldStudentForm'])->name('old.student.apply');
 Route::post('submit-application', [ApplicationController::class, 'submitApplication'])->name('submit.application');
-Route::get('application/success/{id}', [ApplicationController::class, 'applicationSuccess'])->name('application.success');
 
-// Application status routes
+// Old Student Application
+Route::get('old-student-apply', [ApplicationController::class, 'oldStudentForm'])->name('old.student.apply');
+Route::post('student/verify', [ApplicationController::class, 'verifyStudent'])->name('student.verify');
+Route::post('old-student/submit', [ApplicationController::class, 'submitExistingApplication'])->name('old.student.submit');
+
+// Application success and status routes
+Route::get('application/success/{id}', [ApplicationController::class, 'applicationSuccess'])->name('application.success');
 Route::get('applications/{applicationId}', [ApplicationController::class, 'show'])->name('applications.show');
 Route::get('applications/{applicationId}/pay', [ApplicationController::class, 'paymentPage'])->name('applications.payment');
 Route::get('applications/{applicationId}/status', [ApplicationController::class, 'checkStatus'])->name('applications.status');
 
-Route::prefix('applications')->name('applications.')->group(function () {
-    Route::get('/old-student', [ApplicationController::class, 'oldStudentForm'])->name('old.student.form');
-    Route::post('/old-student/submit', [ApplicationController::class, 'submitExistingApplication'])->name('old.submit');
-    
+
+
+// Clear verification
+Route::get('clear-verification', [ApplicationController::class, 'clearVerification'])->name('old.student.clear');
+
+// ========== TEST ROUTES ==========
+
+// Test route to create student
+Route::get('/test/create-student', function () {
+    try {
+        // Check if student exists
+        $exists = DB::table('students')
+            ->where('student_id', 'WYTU202400001')
+            ->exists();
+        
+        if ($exists) {
+            return "✅ Test student already exists!<br>
+                   Student ID: WYTU202400001<br>
+                   Password: password123<br>
+                   DOB: 2000-01-01<br>
+                   <a href='/old-student-apply'>Go to application</a>";
+        }
+        
+        // Create test student
+        DB::table('students')->insert([
+            'student_id' => 'WYTU202400001',
+            'name' => 'John Doe',
+            'email' => 'john@student.com',
+            'phone' => '09123456789',
+            'password' => Hash::make('password123'),
+            'department' => 'Computer Engineering and Information Technology',
+            'date_of_birth' => '2000-01-01',
+            'gender' => 'male',
+            'nrc_number' => '12/ABC(N)123456',
+            'address' => 'Test Address, Yangon',
+            'current_year' => 'first_year',
+            'academic_year' => '2024-2025',
+            'cgpa' => 3.5,
+            'status' => 'active',
+            'registration_date' => now(),
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+        
+        return "✅ Test student created successfully!<br>
+               Student ID: WYTU202400001<br>
+               Password: password123<br>
+               DOB: 2000-01-01<br>
+               <a href='/old-student-apply'>Go to application</a>";
+               
+    } catch (\Exception $e) {
+        return "❌ Error: " . $e->getMessage();
+    }
 });
 
-Route::post('/student/verify', [ApplicationController::class, 'verifyStudent'])->name('student.verify');
+// ========== STUDENT PASSWORD ROUTES ==========
+Route::get('student/forgot-password', [StudentController::class, 'forgotPassword'])->name('student.forgot-password');
+Route::post('student/send-password-reset', [StudentController::class, 'sendPasswordReset'])->name('student.send.password.reset');
 
 // ========== PAYMENT ROUTES ==========
 
-// Payment Routes
 Route::get('/payment/{applicationId}', [PaymentController::class, 'show'])->name('payment.show');
 Route::post('/payment/process/{applicationId}', [PaymentController::class, 'process'])->name('payment.process');
 Route::get('/payment/success/{applicationId}', [PaymentController::class, 'success'])->name('payment.success');
@@ -87,17 +142,11 @@ Route::get('applications/{applicationId}/retry-payment', [PaymentController::cla
 // ========== VALIDATION ROUTES ==========
 
 Route::post('check-nrc', [ApplicationController::class, 'checkNrc'])->name('check.nrc');
-Route::post('check-student-id', [ApplicationController::class, 'checkStudentId'])->name('check.student.id');
-
-Route::post('/check-email', [ApplicationController::class, 'checkEmail'])->name('check.email');
-
+Route::post('check-email', [ApplicationController::class, 'checkEmail'])->name('check.email');
 
 // ========== DEPARTMENT & COURSE ROUTES ==========
 
-// Department routes
 Route::get('department1', [DeptController::class, 'department1'])->name('home.department1');
-
-// Course routes
 Route::get('c1', [DeptController::class, 'c1'])->name('home.coursecode');
 Route::get('c2', [DeptController::class, 'c2'])->name('home.coursecode1');
 Route::get('c3', [DeptController::class, 'c3'])->name('home.coursecode2');
@@ -135,6 +184,7 @@ Route::get('univ-info', function () {
 })->name('univ-info');
 
 // ========== STUDENT AUTH ROUTES ==========
+
 Route::prefix('student')->name('student.')->group(function () {
     // Login Routes
     Route::middleware(['guest:student'])->group(function () {
@@ -150,16 +200,16 @@ Route::prefix('student')->name('student.')->group(function () {
     Route::middleware(['auth:student'])->group(function () {
         // Auth routes
         Route::post('logout', [StudentAuthController::class, 'logout'])->name('logout');
-        
+
         // Dashboard & Profile
         Route::get('dashboard', [StudentDashboardController::class, 'dashboard'])->name('dashboard');
         Route::get('profile', [StudentDashboardController::class, 'profile'])->name('profile');
         Route::post('profile/update', [StudentDashboardController::class, 'updateProfile'])->name('profile.update');
-        
+
         // Password Management
         Route::get('change-password', [StudentAuthController::class, 'showChangePasswordForm'])->name('password.change');
         Route::post('change-password', [StudentAuthController::class, 'changePassword'])->name('password.change.submit');
-        
+
         // Academic & Financial
         Route::get('payments', [StudentDashboardController::class, 'paymentHistory'])->name('payments');
         Route::get('academic-info', [StudentDashboardController::class, 'academicInfo'])->name('academic.info');
@@ -178,12 +228,11 @@ Route::middleware(['auth'])->group(function () {
 // ========== ADMIN ROUTES ==========
 
 Route::middleware(['auth:admin'])->prefix('admin')->name('admin.')->group(function () {
-
-    // MAIN DASHBOARD - This route MUST be defined
+    // MAIN DASHBOARD
     Route::get('dashboard', [AdminDashboardController::class, 'index'])->name('dashboard');
     Route::post('logout', [AdminLoginController::class, 'logout'])->name('logout');
 
-    // ========== GLOBAL ADMIN ROUTES ==========
+    // GLOBAL ADMIN ROUTES
     Route::get('global-dashboard', [GlobalAdminController::class, 'dashboard'])->name('global.dashboard');
     Route::get('global', [GlobalAdminController::class, 'dashboard'])->name('global');
     Route::get('applications/all', [GlobalAdminController::class, 'allApplications'])->name('applications.all');
@@ -199,7 +248,7 @@ Route::middleware(['auth:admin'])->prefix('admin')->name('admin.')->group(functi
     Route::post('applications/{id}/reject', [GlobalAdminController::class, 'rejectApplication'])->name('applications.reject');
     Route::post('bulk-actions', [GlobalAdminController::class, 'bulkActions'])->name('bulk-actions');
 
-    // ========== FINANCE ADMIN ROUTES ==========
+    // FINANCE ADMIN ROUTES
     Route::get('finance-dashboard', [FaController::class, 'dashboard'])->name('finance.dashboard');
     Route::get('applications/finance', [FaController::class, 'financeApplications'])->name('applications.finance');
     Route::get('verify-payment/{id}', [FaController::class, 'verifyPayment'])->name('applications.verify-payment');
@@ -217,529 +266,60 @@ Route::middleware(['auth:admin'])->prefix('admin')->name('admin.')->group(functi
     Route::get('payments/export', [App\Http\Controllers\Admin\PaymentController::class, 'export'])->name('payments.export');
     Route::post('verify-payment/{id}', [FaController::class, 'verifyPayment'])->name('applications.verify-payment');
 
-
-    // Academic Admin Routes
+    // ACADEMIC ADMIN ROUTES
     Route::get('academic-dashboard', [HaaController::class, 'dashboard'])->name('academic.dashboard');
     Route::get('applications/academic', [HaaController::class, 'academicApplications'])->name('applications.academic');
     Route::get('applications/assigned', [HaaController::class, 'assignedApplications'])->name('applications.assigned');
     Route::get('application/view/{id}', [HaaController::class, 'viewApplication'])->name('applications.view');
-
-    // Department assignment and approval routes
     Route::post('academic/assign-department/{id}', [HaaController::class, 'assignDepartment'])->name('academic.assign-department');
     Route::post('academic/quick-assign/{id}', [HaaController::class, 'quickAssign'])->name('academic.quick-assign');
     Route::post('academic-approve/{id}', [HaaController::class, 'academicApprove'])->name('applications.academic-approve');
     Route::post('academic-reject/{id}', [HaaController::class, 'academicReject'])->name('applications.academic-reject');
+    Route::get('haa', [HaaController::class, 'dashboard'])->name('haa');
+    Route::get('academic-affairs', [HaaController::class, 'academicAffairs'])->name('academic-affairs');
+    Route::get('academic/affairs', [HaaController::class, 'academicAffairs'])->name('academic.affairs');
+    Route::get('course-management', [HaaController::class, 'courseManagement'])->name('course.management');
+    Route::post('approve-academic/{id}', [HaaController::class, 'approveAcademic'])->name('approve.academic');
+    Route::post('final-approve/{id}', [HaaController::class, 'finalApprove'])->name('applications.final-approve');
+    Route::get('/old-student-applications', [HaaController::class, 'oldStudentApplications'])->name('old-student.applications');
+    Route::get('/old-application/{id}', [HaaController::class, 'viewOldApplication'])->name('old-application.view');
+    Route::post('/old-application/{id}/verify', [HaaController::class, 'verifyOldStudent'])->name('old-student.verify');
 
-
-   // ========== ACADEMIC ADMIN ROUTES ==========
-Route::get('academic-dashboard', [HaaController::class, 'dashboard'])->name('academic.dashboard');
-Route::get('applications/academic', [HaaController::class, 'academicApplications'])->name('applications.academic');
-Route::post('academic-approve/{id}', [HaaController::class, 'academicApprove'])->name('applications.academic-approve');
-Route::post('academic-reject/{id}', [HaaController::class, 'academicReject'])->name('applications.academic-reject');
-Route::get('haa', [HaaController::class, 'dashboard'])->name('haa');
-Route::get('academic-affairs', [HaaController::class, 'academicAffairs'])->name('academic-affairs');
-Route::get('academic/affairs', [HaaController::class, 'academicAffairs'])->name('academic.affairs');
-Route::get('course-management', [HaaController::class, 'courseManagement'])->name('course.management');
-Route::post('approve-academic/{id}', [HaaController::class, 'approveAcademic'])->name('approve.academic');
-Route::get('application/view/{id}', [HaaController::class, 'viewApplication'])->name('applications.view');
-Route::post('final-approve/{id}', [HaaController::class, 'finalApprove'])->name('applications.final-approve');
-
-Route::get('/old-student-applications', [HaaController::class, 'oldStudentApplications'])->name('old-student.applications');
-Route::get('/old-application/{id}', [HaaController::class, 'viewOldApplication'])->name('old-application.view');
-Route::post('/old-application/{id}/verify', [HaaController::class, 'verifyOldStudent'])->name('old-student.verify');
-
-
-
-    // ========== HOD ROUTES ==========
+    // HOD ROUTES
     Route::get('hod-dashboard', [HodController::class, 'dashboard'])->name('hod.dashboard');
     Route::get('hod', [HodController::class, 'dashboard'])->name('hod');
     Route::get('applications/hod', [HodController::class, 'hodApplications'])->name('applications.hod');
     Route::post('final-approve/{id}', [HodController::class, 'finalApprove'])->name('applications.final-approve');
     Route::post('approve-final/{id}', [HodController::class, 'approveFinal'])->name('approve.final');
-
     Route::post('applications/hod-reject/{id}', [HodController::class, 'hodReject'])->name('applications.hod-reject');
     Route::get('my-department', [HodController::class, 'myDepartment'])->name('my-department');
     Route::get('department-applications', [HodController::class, 'departmentApplications'])->name('department.applications');
     Route::get('department-students', [HodController::class, 'departmentStudents'])->name('department.students');
-
-    Route::get('my-department', [HodController::class, 'myDepartment'])->name('my-department');
-    Route::get('department-applications', [HodController::class, 'departmentApplications'])->name('department.applications');
-
-
-    // Staff Management Routes
     Route::get('hod/staff', [HodController::class, 'staffIndex'])->name('hod.staff.index');
     Route::post('hod/staff', [HodController::class, 'staffStore'])->name('hod.staff.store');
     Route::put('hod/staff/{id}', [HodController::class, 'staffUpdate'])->name('hod.staff.update');
     Route::delete('hod/staff/{id}', [HodController::class, 'staffDestroy'])->name('hod.staff.destroy');
 
-// ========== HSA ADMIN ROUTES ==========
+    // HSA ADMIN ROUTES
     Route::get('hsa-dashboard', [HsaController::class, 'dashboard'])->name('hsa.dashboard');
     Route::get('hsa', [HsaController::class, 'dashboard'])->name('hsa');
     Route::get('staff-management', [HsaController::class, 'staffManagement'])->name('staff.management');
     Route::get('teacher-management', [HsaController::class, 'teacherManagement'])->name('teacher.management');
     Route::post('assign-teacher/{id}', [HsaController::class, 'assignTeacher'])->name('assign.teacher');
 
-    // ========== TEACHER ADMIN ROUTES ==========
+    // TEACHER ADMIN ROUTES
     Route::get('teacher-dashboard', [TeacherController::class, 'dashboard'])->name('teacher.dashboard');
     Route::get('teacher', [TeacherController::class, 'dashboard'])->name('teacher');
     Route::get('my-students', [TeacherController::class, 'myStudents'])->name('my.students');
     Route::get('student-progress/{id}', [TeacherController::class, 'studentProgress'])->name('student.progress');
 
-    // ========== COMMON ADMIN ROUTES (accessible by all admins) ==========
+    // COMMON ADMIN ROUTES
     Route::get('profile', [AdminDashboardController::class, 'profile'])->name('profile');
     Route::get('settings', [AdminDashboardController::class, 'settings'])->name('settings');
-    Route::get('applications/{id}', [ApplicationApprovalController::class, 'viewApplication'])->name('applications.view');
 });
 
-// ========== LEGACY ROUTES (Keep for backward compatibility) ==========
+// ========== LEGACY ROUTES ==========
+
 Route::get('choose-login', function () {
     return redirect('/');
 })->name('choose.login');
-
-// ========== DEBUG & TESTING ROUTES  ==========
-
-if (app()->environment('local')) {
-    // Simulation routes
-    Route::get('payment/simulate/success/{payment}', [PaymentController::class, 'simulateSuccess'])->name('payment.simulate.success');
-    Route::get('payment/simulate/failure/{payment}', [PaymentController::class, 'simulateFailure'])->name('payment.simulate.failure');
-
-    // Test application route
-    Route::get('/test-application', function () {
-        try {
-            $app = App\Models\Application::create([
-                'name' => 'Test User',
-                'email' => 'test@example.com',
-                'phone' => '09123456789',
-                'father_name' => 'Test Father',
-                'mother_name' => 'Test Mother',
-                'date_of_birth' => '2000-01-01',
-                'gender' => 'male',
-                'nationality' => 'Myanmar',
-                'nrc_number' => '12/TEST(N)123457',
-                'address' => 'Test Address',
-                'application_type' => 'new',
-                'department' => 'Computer Engineering and Information Technology',
-                'high_school_name' => 'Test School',
-                'high_school_address' => 'Test School Address',
-                'graduation_year' => 2023,
-                'matriculation_score' => 450.00,
-                'previous_qualification' => 'High School',
-                'status' => 'payment_pending',
-                'payment_status' => 'pending'
-            ]);
-
-            return "Test application created successfully! ID: " . $app->id;
-        } catch (\Exception $e) {
-            return "Error creating test application: " . $e->getMessage();
-        }
-    });
-
-    Route::get('/debug-admin-routes', function () {
-        $admin = Auth::guard('admin')->user();
-        if (!$admin) {
-            return "No admin logged in. <a href='/admin/login'>Login here</a>";
-        }
-
-        echo "<h3>Current Admin:</h3>";
-        echo "Name: " . $admin->name . "<br>";
-        echo "Email: " . $admin->email . "<br>";
-        echo "Role: " . $admin->role . "<br>";
-        echo "ID: " . $admin->id . "<br>";
-
-        echo "<h3>Available Routes:</h3>";
-        echo "<a href='" . route('admin.dashboard') . "'>Main Dashboard</a><br>";
-
-        if ($admin->role === 'global_admin') {
-            echo "<a href='" . route('admin.global.dashboard') . "'>Global Dashboard</a><br>";
-            echo "<a href='" . route('admin.global') . "'>Legacy Global Route</a><br>";
-        }
-
-        echo "<h3>Session Data:</h3>";
-        dump(session()->all());
-    });
-
-
-    // Debug route for academic admin
-    Route::get('/debug-academic-routes', function () {
-        $routes = [
-            'admin.academic.dashboard' => route('admin.academic.dashboard'),
-            'admin.applications.academic' => route('admin.applications.academic'),
-            'admin.applications.view' => route('admin.applications.view', 1),
-            'admin.academic.quick-assign' => route('admin.academic.quick-assign', 1),
-            'admin.academic.assign-department' => route('admin.academic.assign-department', 1),
-            'admin.applications.academic-approve' => route('admin.applications.academic-approve', 1),
-            'admin.applications.academic-reject' => route('admin.applications.academic-reject', 1),
-        ];
-
-        return response()->json($routes);
-    });
-
-
-    // Debug route to check academic routes
-    Route::get('/debug-academic-routes-list', function () {
-        $routes = [
-            'admin.academic.dashboard' => 'Exists: ' . (Route::has('admin.academic.dashboard') ? 'YES' : 'NO'),
-            'admin.applications.academic' => 'Exists: ' . (Route::has('admin.applications.academic') ? 'YES' : 'NO'),
-            'admin.applications.view' => 'Exists: ' . (Route::has('admin.applications.view') ? 'YES' : 'NO'),
-            'admin.academic.quick-assign' => 'Exists: ' . (Route::has('admin.academic.quick-assign') ? 'YES' : 'NO'),
-            'admin.academic.assign-department' => 'Exists: ' . (Route::has('admin.academic.assign-department') ? 'YES' : 'NO'),
-            'admin.applications.academic-approve' => 'Exists: ' . (Route::has('admin.applications.academic-approve') ? 'YES' : 'NO'),
-            'admin.applications.academic-reject' => 'Exists: ' . (Route::has('admin.applications.academic-reject') ? 'YES' : 'NO'),
-        ];
-
-        echo "<h3>Academic Route Status:</h3>";
-        foreach ($routes as $name => $status) {
-            echo "<strong>{$name}</strong>: {$status}<br>";
-        }
-
-        echo "<h3>All routes with 'academic' or 'applications':</h3>";
-        $allRoutes = Route::getRoutes();
-        foreach ($allRoutes as $route) {
-            if (method_exists($route, 'getName') && $route->getName()) {
-                $name = $route->getName();
-                if (str_contains($name, 'academic') || str_contains($name, 'applications')) {
-                    echo "<strong>{$name}</strong>: {$route->uri}<br>";
-                }
-            }
-        }
-    });
-
-
-
-    // Debug route for academic routes
-    Route::get('/debug-academic-routes', function () {
-        $academicRoutes = collect(\Route::getRoutes()->getRoutes())
-            ->filter(function ($route) {
-                return str_contains($route->uri, 'academic') ||
-                    str_contains($route->uri, 'admin') ||
-                    (method_exists($route, 'getName') && $route->getName() && str_contains($route->getName(), 'academic'));
-            })
-            ->map(function ($route) {
-                return [
-                    'name' => $route->getName(),
-                    'uri' => $route->uri,
-                    'action' => $route->getActionName(),
-                ];
-            });
-
-        return response()->json($academicRoutes->values());
-    });
-
-
-    // Test route to check if admin.academic.dashboard exists
-    Route::get('/test-admin-academic-route', function () {
-        try {
-            $url = route('admin.academic.dashboard');
-            return "SUCCESS: Route exists! URL: " . $url;
-        } catch (\Exception $e) {
-            return "ERROR: " . $e->getMessage();
-        }
-    });
-
-    // Test email route
-    Route::get('/test-email', function () {
-        try {
-            \Mail::raw('Test email from WYTU System', function ($message) {
-                $message->to('test@example.com')
-                    ->subject('Test Email from Laravel');
-            });
-            return 'Email sent successfully!';
-        } catch (\Exception $e) {
-            return 'Email error: ' . $e->getMessage();
-        }
-    });
-
-    // Test payment simulation route
-    Route::get('/test-payment-success/{applicationId}', function ($applicationId) {
-        try {
-            $application = \App\Models\Application::findOrFail($applicationId);
-
-            \Illuminate\Support\Facades\DB::beginTransaction();
-
-            // Create fake payment record
-            $payment = \App\Models\Payment::create([
-                'application_id' => $application->id,
-                'amount' => 50000,
-                'payment_method' => 'test',
-                'status' => 'completed',
-                'transaction_id' => 'TEST_TXN_' . \Illuminate\Support\Str::random(10),
-                'paid_at' => now(),
-            ]);
-
-            // Update application status
-            $application->update([
-                'payment_status' => 'verified',
-                'status' => 'payment_verified'
-            ]);
-
-            // Create student account for new students
-            if ($application->application_type === 'new') {
-                $studentId = 'STU' . date('y') . 'TEST' . \Illuminate\Support\Str::random(3);
-                $password = \Illuminate\Support\Str::random(12);
-
-                $student = \App\Models\Student::create([
-                    'student_id' => $studentId,
-                    'application_id' => $application->id,
-                    'name' => $application->name,
-                    'email' => $application->email,
-                    'phone' => $application->phone,
-                    'password' => \Illuminate\Support\Facades\Hash::make($password),
-                    'department' => $application->department,
-                    'date_of_birth' => $application->date_of_birth,
-                    'gender' => $application->gender,
-                    'nrc_number' => $application->nrc_number,
-                    'address' => $application->address,
-                    'status' => 'active',
-                    'registration_date' => now(),
-                ]);
-
-                $application->update(['student_id' => $studentId]);
-
-                // Send email
-                \Illuminate\Support\Facades\Mail::send('emails.student-credentials', [
-                    'student' => $student,
-                    'password' => $password,
-                    'loginUrl' => url('/login')
-                ], function ($message) use ($student) {
-                    $message->to($student->email)
-                        ->subject('Your Student Account Credentials - WYTU');
-                });
-            }
-
-            \Illuminate\Support\Facades\DB::commit();
-
-            return redirect()->route('payment.success', $application->id)
-                ->with('success', 'Test payment completed successfully! Student credentials sent to email.');
-        } catch (\Exception $e) {
-            \Illuminate\Support\Facades\DB::rollBack();
-            return back()->with('error', 'Test payment failed: ' . $e->getMessage());
-        }
-    });
-
-    // Test payment page - shows all pending applications for testing
-    Route::get('/test-payments', function () {
-        $applications = \App\Models\Application::where('status', 'payment_pending')
-            ->where('payment_status', 'pending')
-            ->get();
-
-        return view('test-payments', compact('applications'));
-    });
-}
-
-// ========== PAYMENT DEBUG ROUTES ==========
-
-Route::get('/check-payments', function () {
-    $payments = App\Models\Payment::with('application')->get();
-
-    echo "<h3>Payments in Database:</h3>";
-    foreach ($payments as $payment) {
-        echo "ID: {$payment->id}<br>";
-        echo "Transaction: {$payment->transaction_id}<br>";
-        echo "Application: {$payment->application->name} ({$payment->application->application_id})<br>";
-        echo "Amount: {$payment->amount}<br>";
-        echo "Status: {$payment->status}<br>";
-        echo "Method: {$payment->payment_method}<br>";
-        echo "Created: {$payment->created_at}<br>";
-        echo "Paid At: " . ($payment->paid_at ? $payment->paid_at : 'Not paid') . "<br>";
-        echo "<hr>";
-    }
-});
-
-Route::get('/check-payment-config', function () {
-    echo "<h3>Payment Configuration:</h3>";
-
-    $configs = [
-        'payment.admission_fee',
-        'payment.kpay_base_url',
-        'payment.kpay_merchant_id',
-        'payment.kpay_secret_key',
-    ];
-
-    foreach ($configs as $config) {
-        $value = config($config);
-        echo "{$config}: " . ($value ? $value : 'NOT SET') . "<br>";
-    }
-});
-
-
-
-
-// Add this to your web.php temporarily
-
-Route::get('/debug-application/{id}', function ($id) {
-    try {
-        $application = \App\Models\Application::find($id);
-
-
-Route::get('/debug-application/{id}', function($id) {
-    try {
-        $application = \App\Models\Application::find($id);
-        
-
-        if (!$application) {
-            return response()->json([
-                'error' => 'Application not found in database',
-                'searched_id' => $id
-            ], 404);
-        }
-
-        return response()->json([
-            'success' => true,
-            'application' => [
-                'id' => $application->id,
-                'application_id' => $application->application_id,
-                'name' => $application->name,
-                'status' => $application->status,
-                'payment_status' => $application->payment_status
-            ],
-            'payment_route' => route('payment.show', $application->id),
-            'payment_url' => url('/payment/' . $application->id)
-        ]);
-
-    } catch (\Exception $e) {
-        return response()->json([
-            'error' => $e->getMessage(),
-            'trace' => $e->getTraceAsString()
-        ], 500);
-    }
-
-});
-    } catch (\Exception $e) {
-        return response()->json([
-            'error' => $e->getMessage(),
-            'trace' => $e->getTraceAsString()
-        ], 500);
-    }
-});
-
-
-
-
-
-
-
-
-
-
-
-Route::get('/check-students-table', function() {
-    $columns = \Schema::getColumnListing('students');
-    echo "<h3>Current Students Table Columns:</h3>";
-    echo "<ul>";
-    foreach ($columns as $column) {
-        echo "<li>{$column}</li>";
-    }
-    echo "</ul>";
-    
-    // Check if students table exists
-    if (\Schema::hasTable('students')) {
-        echo "<p style='color: green;'>Students table exists</p>";
-    } else {
-        echo "<p style='color: red;'>Students table does NOT exist</p>";
-    }
-});
-
-
-
-
-
-
-
-
-// Add this debug route
-Route::get('/debug-student-date/{studentId}', function($studentId) {
-    $student = \App\Models\Student::where('student_id', $studentId)->first();
-    
-    if (!$student) {
-        return "Student not found";
-    }
-    
-    echo "<h3>Student Date of Birth Analysis:</h3>";
-    echo "Student ID: " . $student->student_id . "<br>";
-    echo "Name: " . $student->name . "<br>";
-    echo "Date of Birth (raw): " . $student->date_of_birth . "<br>";
-    echo "Date of Birth (type): " . gettype($student->date_of_birth) . "<br>";
-    
-    if ($student->date_of_birth instanceof \DateTime) {
-        echo "Date of Birth (format Y-m-d): " . $student->date_of_birth->format('Y-m-d') . "<br>";
-        echo "Date of Birth (format d-m-Y): " . $student->date_of_birth->format('d-m-Y') . "<br>";
-        echo "Date of Birth (format Y/m/d): " . $student->date_of_birth->format('Y/m/d') . "<br>";
-    } else {
-        echo "Date of Birth (string): " . (string)$student->date_of_birth . "<br>";
-    }
-    
-    echo "<h3>Database Column Type:</h3>";
-    $columnType = \DB::select("SHOW COLUMNS FROM students WHERE Field = 'date_of_birth'");
-    echo "Column Type: " . $columnType[0]->Type . "<br>";
-    
-    return "";
-});
-
-
-
-
-
-
-
-
-
-
-
-Route::get('/test-verify/{studentId}', function($studentId) {
-    $student = \App\Models\Student::where('student_id', $studentId)->first();
-    
-    if (!$student) {
-        return response()->json(['error' => 'Student not found'], 404);
-    }
-    
-    // Test different date formats
-    $testDates = [
-        '1999-01-01', // Correct format
-        '01-01-1999', // DD-MM-YYYY
-        '01/01/1999', // DD/MM/YYYY
-        '1999/01/01', // YYYY/MM/DD
-        'Jan 1, 1999', // Text format
-    ];
-    
-    $results = [];
-    foreach ($testDates as $testDate) {
-        try {
-            $inputDate = \Carbon\Carbon::parse($testDate);
-            $studentDate = \Carbon\Carbon::parse($student->date_of_birth);
-            
-            $results[$testDate] = [
-                'input_parsed' => $inputDate->format('Y-m-d'),
-                'student_parsed' => $studentDate->format('Y-m-d'),
-                'match' => $inputDate->format('Y-m-d') === $studentDate->format('Y-m-d'),
-                'input_timestamp' => $inputDate->timestamp,
-                'student_timestamp' => $studentDate->timestamp,
-            ];
-        } catch (\Exception $e) {
-            $results[$testDate] = ['error' => $e->getMessage()];
-        }
-    }
-    
-    return response()->json([
-        'student' => [
-            'id' => $student->id,
-            'student_id' => $student->student_id,
-            'name' => $student->name,
-            'date_of_birth' => $student->date_of_birth,
-            'date_of_birth_formatted' => \Carbon\Carbon::parse($student->date_of_birth)->format('Y-m-d'),
-        ],
-        'test_results' => $results
-    ]);
-});
-
-
-
-
-// In routes/web.php, add this test route
-Route::get('/test-verification-route', function() {
-    return response()->json([
-        'route_exists' => Route::has('student.verify'),
-        'url' => route('student.verify'),
-        'method' => 'POST',
-        'csrf_token' => csrf_token()
-    ]);
-});

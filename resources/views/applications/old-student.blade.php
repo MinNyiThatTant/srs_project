@@ -627,10 +627,9 @@
                                 <span class="badge bg-success px-3 py-2 fs-6">
                                     <i class="fas fa-shield-check me-1"></i> VERIFIED
                                 </span>
-                                <button type="button" class="btn btn-outline-secondary btn-sm mt-2"
-                                    id="changeStudentBtn">
+                                <a href="{{ route('clear.verification') }}" class="btn btn-outline-warning btn-sm mt-2">
                                     <i class="fas fa-sync me-1"></i>Change Student
-                                </button>
+                                </a>
                             </div>
                         </div>
 
@@ -708,7 +707,7 @@
 
                 <!-- Application Form (only enabled if student is verified) -->
                 @if (isset($student) && $student)
-                    <form action="{{ route('applications.old.submit') }}" method="POST" id="oldStudentForm">
+                    <form action="{{ route('applications.submit.existing') }}" method="POST" id="oldStudentForm">
                         @csrf
                         <input type="hidden" name="application_type" value="old">
 
@@ -918,126 +917,129 @@
                             <i class="fas fa-file-alt me-2"></i>Application Details
                         </h4>
 
-                        <div class="mb-4">
-                            <label for="reason_for_application" class="form-label required-label">Reason for
-                                Application</label>
-                            <textarea class="form-control @error('reason_for_application') is-invalid @enderror" id="reason_for_application"
-                                name="reason_for_application" rows="6"
-                                placeholder="Please explain in detail:
-• Why you are applying for the next academic year
-• Any special circumstances affecting your studies
-• Your academic goals and plans
-• How you plan to improve your performance (if applicable)"
-                                required>{{ old('reason_for_application') }}</textarea>
-                            @error('reason_for_application')
-                                <div class="invalid-feedback">{{ $message }}</div>
-                            @enderror
-                            <div class="character-count mt-2">
-                                Character count: <span id="charCount">0</span>/1000
-                                <span id="charCountStatus"></span>
+                        <div class="row">
+                            <div class="col-md-12">
+                                <div class="mb-4">
+                                    <label for="reason" class="form-label required-label">Reason for Continuing
+                                        Study</label>
+                                    <textarea class="form-control @error('reason') is-invalid @enderror" id="reason" name="reason" rows="4"
+                                        placeholder="Please explain why you wish to continue your studies at WYTU..." maxlength="500" required>{{ old('reason') }}</textarea>
+                                    @error('reason')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                    <div class="character-count mt-1" id="reasonCount">0/500 characters</div>
+                                    <small class="text-muted">Describe your academic goals and reasons for
+                                        continuing</small>
+                                </div>
                             </div>
-                            <small class="text-muted d-block">Minimum 50 characters required. Provide detailed information
-                                for better processing.</small>
                         </div>
 
-                        <!-- Additional Documents (if needed) -->
-                        @if (old('previous_year_status', 'passed') == 'failed')
-                            <div class="mb-4 alert alert-warning">
-                                <h6><i class="fas fa-exclamation-triangle me-2"></i>Additional Requirements</h6>
-                                <p>Since you indicated "Failed" as your previous year status, you need to provide:</p>
-                                <ul class="mb-2">
-                                    <li>Retake examination form (if applicable)</li>
-                                    <li>Academic improvement plan</li>
-                                    <li>Counseling session completion certificate</li>
-                                </ul>
-                                <small>These documents should be submitted to the academic office within 7 days.</small>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-4">
+                                    <label for="emergency_contact" class="form-label required-label">Emergency Contact
+                                        Person</label>
+                                    <input type="text"
+                                        class="form-control @error('emergency_contact') is-invalid @enderror"
+                                        id="emergency_contact" name="emergency_contact"
+                                        value="{{ old('emergency_contact') }}"
+                                        placeholder="Enter full name of emergency contact" required>
+                                    @error('emergency_contact')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                </div>
                             </div>
-                        @endif
+                            <div class="col-md-6">
+                                <div class="mb-4">
+                                    <label for="emergency_phone" class="form-label required-label">Emergency Contact
+                                        Phone</label>
+                                    <input type="tel"
+                                        class="form-control @error('emergency_phone') is-invalid @enderror"
+                                        id="emergency_phone" name="emergency_phone" value="{{ old('emergency_phone') }}"
+                                        pattern="[0-9]{10,11}" placeholder="09XXXXXXXXX" required>
+                                    @error('emergency_phone')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror>
+                                </div>
+                            </div>
+                        </div>
 
-                        <!-- Declaration -->
+                        <!-- Declaration Section -->
                         <div class="declaration-box">
-                            <h5 class="declaration-title"><i class="fas fa-file-contract me-2"></i>Declaration</h5>
+                            <div class="declaration-title">
+                                <i class="fas fa-file-signature me-2"></i>Declaration
+                            </div>
 
-                            <div class="mb-3">
-                                <div class="form-check">
-                                    <input class="form-check-input @error('terms') is-invalid @enderror" type="checkbox"
-                                        id="terms" name="terms" required>
-                                    <label class="form-check-label" for="terms">
-                                        <strong>Declaration of Accuracy:</strong> I hereby declare that all the information
-                                        provided in this application is true, complete, and accurate to the best of my
-                                        knowledge. I understand that any false statement or misrepresentation may lead to
-                                        the rejection of my application or termination of my studies.
+                            <div class="mb-4">
+                                <div class="form-check mb-3">
+                                    <input class="form-check-input @error('declaration_accuracy') is-invalid @enderror"
+                                        type="checkbox" id="declaration_accuracy" name="declaration_accuracy"
+                                        value="1" required>
+                                    <label class="form-check-label" for="declaration_accuracy">
+                                        I hereby declare that all information provided in this application is true,
+                                        complete, and accurate to the best of my knowledge.
+                                        I understand that any false statement or omission may lead to rejection of my
+                                        application or subsequent dismissal from the university.
                                     </label>
-                                    @error('terms')
-                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @error('declaration_accuracy')
+                                        <div class="invalid-feedback d-block">{{ $message }}</div>
+                                    @enderror
+                                </div>
+
+                                <div class="form-check mb-3">
+                                    <input class="form-check-input @error('declaration_fee') is-invalid @enderror"
+                                        type="checkbox" id="declaration_fee" name="declaration_fee" value="1"
+                                        required>
+                                    <label class="form-check-label" for="declaration_fee">
+                                        I understand and agree to pay the application fee as specified. I acknowledge that
+                                        the fee is non-refundable once the application is processed.
+                                    </label>
+                                    @error('declaration_fee')
+                                        <div class="invalid-feedback d-block">{{ $message }}</div>
+                                    @enderror
+                                </div>
+
+                                <div class="form-check">
+                                    <input class="form-check-input @error('declaration_rules') is-invalid @enderror"
+                                        type="checkbox" id="declaration_rules" name="declaration_rules" value="1"
+                                        required>
+                                    <label class="form-check-label" for="declaration_rules">
+                                        I agree to abide by all rules and regulations of West Yangon Technological
+                                        University.
+                                        I understand that my continuation is subject to academic performance and adherence
+                                        to university policies.
+                                    </label>
+                                    @error('declaration_rules')
+                                        <div class="invalid-feedback d-block">{{ $message }}</div>
                                     @enderror
                                 </div>
                             </div>
 
-                            <div class="mb-3">
-                                <div class="form-check">
-                                    <input class="form-check-input @error('declaration') is-invalid @enderror"
-                                        type="checkbox" id="declaration" name="declaration" required>
-                                    <label class="form-check-label" for="declaration">
-                                        <strong>Academic Responsibility:</strong> I understand that I am responsible for
-                                        meeting all academic requirements and deadlines. I agree to abide by the
-                                        university's rules and regulations.
-                                    </label>
-                                    @error('declaration')
-                                        <div class="invalid-feedback">{{ $message }}</div>
-                                    @enderror
-                                </div>
-                            </div>
-
-                            <div class="mb-3">
-                                <div class="form-check">
-                                    <input class="form-check-input" type="checkbox" id="payment_declaration" required>
-                                    <label class="form-check-label" for="payment_declaration">
-                                        <strong>Payment Acknowledgement:</strong> I understand that I must complete the
-                                        payment of the application fee within 3 days for my application to be processed. I
-                                        acknowledge that the application fee is non-refundable.
-                                    </label>
-                                </div>
-                            </div>
-
-                            <div class="mt-3">
-                                <div class="form-check">
-                                    <input class="form-check-input" type="checkbox" id="data_consent">
-                                    <label class="form-check-label" for="data_consent">
-                                        <strong>Data Consent:</strong> I consent to the university processing my personal
-                                        data for academic and administrative purposes in accordance with the university's
-                                        privacy policy.
-                                    </label>
-                                </div>
+                            <div class="mt-4 p-3 bg-white rounded">
+                                <label for="signature" class="form-label required-label">Electronic Signature</label>
+                                <input type="text" class="form-control @error('signature') is-invalid @enderror"
+                                    id="signature" name="signature" value="{{ old('signature') }}"
+                                    placeholder="Type your full name as electronic signature" required>
+                                @error('signature')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                                <small class="text-muted">By typing your name, you electronically sign this
+                                    application</small>
                             </div>
                         </div>
 
-                        <!-- Submit Section -->
-                        <div class="row mt-4">
-                            <div class="col-12 text-center">
-                                <button type="submit" class="btn-submit" id="submitBtn">
-                                    <i class="fas fa-paper-plane me-2"></i>SUBMIT APPLICATION & PROCEED TO PAYMENT
+                        <!-- Submit Buttons -->
+                        <div class="row mt-5">
+                            <div class="col-md-6">
+                                <button type="button" class="btn btn-cancel w-100 py-3" id="cancelBtn">
+                                    <i class="fas fa-times me-2"></i>Cancel Application
                                 </button>
-                                <a href="{{ route('index') }}" class="btn-cancel ms-3">
-                                    <i class="fas fa-times me-2"></i>CANCEL
-                                </a>
                             </div>
-                        </div>
-
-                        <div class="row mt-4">
-                            <div class="col-12">
-                                <div class="alert alert-info">
-                                    <h6><i class="fas fa-info-circle me-2"></i>Important Information</h6>
-                                    <ul class="mb-0">
-                                        <li><strong>Fields marked with * are required.</strong></li>
-                                        <li>Your application will be processed within 2-3 working days after payment
-                                            verification.</li>
-                                        <li>Application fee must be paid within 3 days or your application will be
-                                            cancelled.</li>
-                                        <li>Keep your application ID safe for future reference and status tracking.</li>
-                                        <li>You will receive email notifications at every stage of your application.</li>
-                                    </ul>
-                                </div>
+                            <div class="col-md-6">
+                                <button type="submit" class="btn btn-submit w-100 py-3" id="submitBtn"
+                                    @if (!isset($student) || !$student) disabled @endif>
+                                    <i class="fas fa-paper-plane me-2"></i>Submit Application
+                                </button>
                             </div>
                         </div>
                     </form>
@@ -1046,453 +1048,115 @@
         </div>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- JavaScript Section -->
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             // Elements
-            const overlay = document.getElementById('overlay');
             const verificationModal = document.getElementById('verificationModal');
-            const showVerificationBtn = document.getElementById('showVerificationModal');
-            const closeVerificationBtn = document.getElementById('closeVerificationModal');
-            const changeStudentBtn = document.getElementById('changeStudentBtn');
+            const overlay = document.getElementById('overlay');
+            const showVerificationModalBtn = document.getElementById('showVerificationModal');
+            const closeVerificationModalBtn = document.getElementById('closeVerificationModal');
             const verificationForm = document.getElementById('verificationForm');
-            const verificationSpinner = document.getElementById('verificationSpinner');
-            const verifyBtn = document.getElementById('verifyBtn');
-            const formOverlay = document.getElementById('formOverlay');
-            const mainForm = document.getElementById('oldStudentForm');
-
-            @if (isset($student) && $student)
-                const purposeSelect = document.getElementById('application_purpose');
-                const yearSelect = document.getElementById('current_year');
-                const reasonTextarea = document.getElementById('reason_for_application');
-                const charCountSpan = document.getElementById('charCount');
-                const charCountStatus = document.getElementById('charCountStatus');
-                const additionalFeeSpan = document.getElementById('additionalFee');
-                const yearMultiplierSpan = document.getElementById('yearMultiplier');
-                const yearMultiplierLabel = document.getElementById('yearMultiplierLabel');
-                const totalFeeSpan = document.getElementById('totalFee');
-                const submitBtn = document.getElementById('submitBtn');
-                const phoneInput = document.getElementById('phone');
-                const phoneConfirmationDiv = document.getElementById('phoneConfirmation');
-                const phoneConfirmationInput = document.getElementById('phone_confirmation');
-                const phoneConfirmationError = document.getElementById('phoneConfirmationError');
-
-                let originalPhone = "{{ $student->phone ?? '' }}";
-                let isStudentVerified = true;
-            @else
-                let isStudentVerified = false;
-            @endif
-
-            // Fee calculation based on purpose and year
-            const additionalFees = {
-                'course_registration': 0,
-                're_examination': 10000,
-                'transfer': 20000,
-                'other': 5000
-            };
-
-            const yearMultipliers = {
-                '1': {
-                    multiplier: 1.0,
-                    label: '1.0x'
-                },
-                '2': {
-                    multiplier: 1.0,
-                    label: '1.0x'
-                },
-                '3': {
-                    multiplier: 1.1,
-                    label: '1.1x'
-                },
-                '4': {
-                    multiplier: 1.2,
-                    label: '1.2x'
-                },
-                '5': {
-                    multiplier: 1.3,
-                    label: '1.3x'
-                }
-            };
-
-            const baseFee = 30000;
 
             // Show verification modal
-            function showVerificationModal() {
-                overlay.style.display = 'block';
-                verificationModal.style.display = 'block';
-                document.body.style.overflow = 'hidden';
+            if (showVerificationModalBtn) {
+                showVerificationModalBtn.addEventListener('click', function() {
+                    verificationModal.style.display = 'block';
+                    overlay.style.display = 'block';
+                });
             }
 
-            // Hide verification modal
-            function hideVerificationModal() {
-                overlay.style.display = 'none';
+            // Close verification modal
+            if (closeVerificationModalBtn) {
+                closeVerificationModalBtn.addEventListener('click', function() {
+                    verificationModal.style.display = 'none';
+                    overlay.style.display = 'none';
+                });
+            }
+
+            // Overlay click to close
+            overlay.addEventListener('click', function() {
                 verificationModal.style.display = 'none';
-                document.body.style.overflow = 'auto';
-            }
-
-            // Show alert
-            function showAlert(type, message) {
-                const alertContainer = document.getElementById('alertContainer');
-                const alertId = 'alert-' + Date.now();
-
-                const alertDiv = document.createElement('div');
-                alertDiv.className = `alert alert-${type} alert-dismissible fade show`;
-                alertDiv.role = 'alert';
-                alertDiv.id = alertId;
-
-                const icon = type === 'success' ? 'fa-check-circle' : 'fa-exclamation-triangle';
-                alertDiv.innerHTML = `
-                <i class="fas ${icon} me-2"></i>
-                ${message}
-                <button type="button" class="btn-close" onclick="document.getElementById('${alertId}').remove()"></button>
-            `;
-
-                alertContainer.appendChild(alertDiv);
-
-                // Auto remove after 5 seconds
-                setTimeout(() => {
-                    if (document.getElementById(alertId)) {
-                        document.getElementById(alertId).remove();
-                    }
-                }, 5000);
-            }
-
-            // Validate CGPA
-            function validateCgpa(input) {
-                const value = parseFloat(input.value);
-                if (isNaN(value) || value < 0 || value > 4) {
-                    input.classList.add('is-invalid');
-                    showAlert('danger', 'CGPA must be between 0.00 and 4.00');
-                    return false;
-                } else {
-                    input.classList.remove('is-invalid');
-                    return true;
-                }
-            }
-
-            // Calculate and display fee
-            function calculateFee() {
-                const purpose = purposeSelect.value;
-                const year = yearSelect.value;
-
-                if (!purpose || !year) {
-                    return;
-                }
-
-                const additionalFee = additionalFees[purpose] || 0;
-                const yearMultiplier = yearMultipliers[year]?.multiplier || 1.0;
-                const yearMultiplierLabelText = yearMultipliers[year]?.label || '1.0x';
-
-                const multiplierAmount = Math.round(baseFee * (yearMultiplier - 1));
-                const totalFee = Math.round((baseFee + additionalFee) * yearMultiplier);
-
-                additionalFeeSpan.textContent = additionalFee.toLocaleString() + ' MMK';
-                yearMultiplierSpan.textContent = multiplierAmount.toLocaleString() + ' MMK';
-                yearMultiplierLabel.textContent = yearMultiplierLabelText;
-                totalFeeSpan.textContent = totalFee.toLocaleString() + ' MMK';
-            }
-
-            // Character count for reason
-            function updateCharCount() {
-                const count = reasonTextarea.value.length;
-                charCountSpan.textContent = count;
-
-                if (count < 50) {
-                    charCountStatus.textContent = '(Minimum 50 characters required)';
-                    charCountStatus.className = 'error';
-                    reasonTextarea.classList.add('is-invalid');
-                } else if (count < 100) {
-                    charCountStatus.textContent = '(Please provide more details)';
-                    charCountStatus.className = 'warning';
-                    reasonTextarea.classList.remove('is-invalid');
-                } else {
-                    charCountStatus.textContent = '(Good)';
-                    charCountStatus.className = 'text-success';
-                    reasonTextarea.classList.remove('is-invalid');
-                }
-            }
-
-            // Check if phone number changed
-            function checkPhoneChange() {
-                if (phoneInput.value !== originalPhone && phoneInput.value.trim() !== '') {
-                    phoneConfirmationDiv.style.display = 'block';
-                    phoneConfirmationInput.required = true;
-                } else {
-                    phoneConfirmationDiv.style.display = 'none';
-                    phoneConfirmationInput.required = false;
-                    phoneConfirmationInput.classList.remove('is-invalid');
-                }
-            }
-
-            // Validate phone confirmation
-            function validatePhoneConfirmation() {
-                if (phoneConfirmationDiv.style.display === 'block') {
-                    if (phoneInput.value !== phoneConfirmationInput.value) {
-                        phoneConfirmationInput.classList.add('is-invalid');
-                        phoneConfirmationError.style.display = 'block';
-                        return false;
-                    } else {
-                        phoneConfirmationInput.classList.remove('is-invalid');
-                        phoneConfirmationError.style.display = 'none';
-                        return true;
-                    }
-                }
-                return true;
-            }
-
-            // Event Listeners
-            if (showVerificationBtn) {
-                showVerificationBtn.addEventListener('click', showVerificationModal);
-            }
-
-            if (changeStudentBtn) {
-                changeStudentBtn.addEventListener('click', showVerificationModal);
-            }
-
-            if (closeVerificationBtn) {
-                closeVerificationBtn.addEventListener('click', hideVerificationModal);
-            }
-
-            if (overlay) {
-                overlay.addEventListener('click', hideVerificationModal);
-            }
-
-            // Verification form submission
-            verificationForm.addEventListener('submit', async function(e) {
-                e.preventDefault();
-
-                const studentId = document.getElementById('modal_student_id').value;
-                const password = document.getElementById('modal_password').value;
-                const dob = document.getElementById('modal_dob').value;
-
-                // Reset errors
-                document.querySelectorAll('.invalid-feedback').forEach(el => {
-                    el.style.display = 'none';
-                });
-                document.querySelectorAll('.form-control').forEach(el => {
-                    el.classList.remove('is-invalid');
-                });
-
-                // Show spinner
-                verificationSpinner.classList.remove('d-none');
-                verifyBtn.disabled = true;
-                verifyBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Verifying...';
-
-                try {
-                    const response = await fetch('{{ route('student.verify') }}', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                        },
-                        body: JSON.stringify({
-                            student_id: studentId,
-                            password: password,
-                            date_of_birth: dob
-                        })
-                    });
-
-                    const data = await response.json();
-
-                    if (data.success) {
-                        showAlert('success', 'Student verified successfully!');
-                        hideVerificationModal();
-
-                        // Reload page with student data
-                        window.location.href =
-                            '{{ route('old.student.apply') }}?verified=true&student_id=' + studentId;
-                    } else {
-                        showAlert('danger', data.message || 'Verification failed');
-
-                        // Show field errors
-                        if (data.errors) {
-                            Object.keys(data.errors).forEach(field => {
-                                const input = document.getElementById('modal_' + field);
-                                const errorEl = document.getElementById(field + 'Error');
-                                if (input) {
-                                    input.classList.add('is-invalid');
-                                }
-                                if (errorEl) {
-                                    errorEl.textContent = data.errors[field][0];
-                                    errorEl.style.display = 'block';
-                                }
-                            });
-                        }
-                    }
-                } catch (error) {
-                    showAlert('danger', 'Network error. Please try again.');
-                    console.error('Verification error:', error);
-                } finally {
-                    verificationSpinner.classList.add('d-none');
-                    verifyBtn.disabled = false;
-                    verifyBtn.innerHTML = '<i class="fas fa-check-circle me-2"></i>Verify Student';
-                }
+                overlay.style.display = 'none';
             });
 
-            // Form validation (only if student is verified and form exists)
-            @if (isset($student) && $student)
-                reasonTextarea.addEventListener('input', updateCharCount);
-                purposeSelect.addEventListener('change', calculateFee);
-                yearSelect.addEventListener('change', calculateFee);
-                phoneInput.addEventListener('input', checkPhoneChange);
-                phoneConfirmationInput.addEventListener('input', validatePhoneConfirmation);
-
-                // Main form submission
-                document.getElementById('oldStudentForm').addEventListener('submit', function(e) {
-                    let isValid = true;
-                    const errors = [];
-
-                    // Validate CGPA
-                    const cgpaInput = document.getElementById('cgpa');
-                    if (!validateCgpa(cgpaInput)) {
-                        errors.push('CGPA must be between 0.00 and 4.00');
-                        isValid = false;
-                    }
-
-                    // Validate reason length
-                    if (reasonTextarea.value.length < 50) {
-                        errors.push('Reason for application must be at least 50 characters');
-                        isValid = false;
-                    }
-
-                    // Validate phone confirmation
-                    if (!validatePhoneConfirmation()) {
-                        errors.push('Phone numbers do not match');
-                        isValid = false;
-                    }
-
-                    // Check required fields
-                    const requiredFields = this.querySelectorAll('[required]');
-                    requiredFields.forEach(field => {
-                        if (!field.value.trim() ||
-                            (field.type === 'checkbox' && !field.checked) ||
-                            (field.tagName === 'SELECT' && field.value === '')) {
-                            field.classList.add('is-invalid');
-                            errors.push(`Please fill in all required fields`);
-                            isValid = false;
-                        }
-                    });
-
-                    if (!isValid) {
-                        e.preventDefault();
-                        showAlert('danger', 'Please fix the errors in the form before submitting.');
-
-                        // Scroll to first error
-                        const firstError = this.querySelector('.is-invalid');
-                        if (firstError) {
-                            firstError.scrollIntoView({
-                                behavior: 'smooth',
-                                block: 'center'
-                            });
-                            firstError.focus();
-                        }
-
-                        return false;
-                    }
-
-                    // Show confirmation dialog
+            // Form submission
+            if (verificationForm) {
+                verificationForm.addEventListener('submit', async function(e) {
                     e.preventDefault();
 
-                    const confirmation = confirm(
-                        'Are you sure you want to submit your application?\n\n' +
-                        'Once submitted, you cannot make changes to your application.\n' +
-                        'You will be redirected to the payment page.\n\n' +
-                        'Click OK to submit and proceed to payment.'
-                    );
+                    // Get form data
+                    const formData = new FormData(this);
+                    const data = Object.fromEntries(formData);
 
-                    if (confirmation) {
-                        this.submit();
-                        submitBtn.disabled = true;
-                        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Submitting...';
+                    // Show loading
+                    const verifyBtn = document.getElementById('verifyBtn');
+                    const originalText = verifyBtn.innerHTML;
+                    verifyBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Verifying...';
+                    verifyBtn.disabled = true;
+
+                    try {
+                        // Send request
+                        const response = await fetch('{{ route('student.verify') }}', {
+                            method: 'POST',
+                            headers: {
+                                'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                                'Accept': 'application/json',
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify(data)
+                        });
+
+                        const result = await response.json();
+
+                        if (result.success) {
+                            // Show success message
+                            alert('Student verified successfully! The page will reload.');
+
+                            // Close modal
+                            verificationModal.style.display = 'none';
+                            overlay.style.display = 'none';
+
+                            // Reload page
+                            setTimeout(() => {
+                                window.location.reload();
+                            }, 1000);
+                        } else {
+                            // Show error
+                            alert('Verification failed: ' + result.message);
+                            verifyBtn.innerHTML = originalText;
+                            verifyBtn.disabled = false;
+                        }
+                    } catch (error) {
+                        console.error('Error:', error);
+                        alert('Network error. Please check your connection.');
+                        verifyBtn.innerHTML = originalText;
+                        verifyBtn.disabled = false;
                     }
                 });
-
-                // Remove invalid class when user starts typing
-                const inputs = document.querySelectorAll('input, select, textarea');
-                inputs.forEach(input => {
-                    input.addEventListener('input', function() {
-                        if (this.value.trim()) {
-                            this.classList.remove('is-invalid');
-                        }
-                    });
-
-                    input.addEventListener('change', function() {
-                        this.classList.remove('is-invalid');
-                    });
-                });
-
-                // Initialize
-                updateCharCount();
-                calculateFee();
-                checkPhoneChange();
-            @endif
-
-            // If student is verified, show form
-            if (isStudentVerified && mainForm) {
-                mainForm.style.display = 'block';
-                if (formOverlay) {
-                    formOverlay.style.display = 'none';
-                }
             }
+
+            // Global functions
+            window.fillExampleDate = function() {
+                document.getElementById('modal_dob').value = '2000-01-15';
+            };
+
+            window.showCurrentDate = function() {
+                const now = new Date();
+                const formatted = now.toISOString().split('T')[0];
+                alert(`Current date format: ${formatted}`);
+            };
         });
 
-        // Helper function for CGPA validation
-        window.validateCgpa = function(input) {
+        // Simple form validation
+        function validateCgpa(input) {
             const value = parseFloat(input.value);
-            const feedback = input.nextElementSibling?.nextElementSibling;
-
             if (isNaN(value) || value < 0 || value > 4) {
                 input.classList.add('is-invalid');
-                if (feedback && feedback.classList.contains('invalid-feedback')) {
-                    feedback.textContent = 'CGPA must be between 0.00 and 4.00';
-                    feedback.style.display = 'block';
-                }
                 return false;
-            } else {
-                input.classList.remove('is-invalid');
-                if (feedback && feedback.classList.contains('invalid-feedback')) {
-                    feedback.style.display = 'none';
-                }
-                return true;
             }
-        };
-
-
-
-
-
-
-        // Add these functions to your JavaScript
-function fillExampleDate() {
-    document.getElementById('modal_dob').value = '1999-01-01';
-    showAlert('info', 'Example date filled: 1999-01-01');
-}
-
-function showCurrentDate() {
-    const dobInput = document.getElementById('modal_dob');
-    if (dobInput.value) {
-        showAlert('info', 'Current date value: ' + dobInput.value);
-    } else {
-        showAlert('warning', 'No date entered yet');
-    }
-}
-
-// Debug function to see what's being submitted
-function debugDateSubmission() {
-    const studentId = document.getElementById('modal_student_id').value;
-    const dob = document.getElementById('modal_dob').value;
-    
-    console.log('Debug - Student ID:', studentId);
-    console.log('Debug - Date of Birth:', dob);
-    console.log('Debug - Date type:', typeof dob);
-    
-    // Parse the date
-    const parsedDate = new Date(dob);
-    console.log('Debug - Parsed date:', parsedDate);
-    console.log('Debug - ISO string:', parsedDate.toISOString());
-    console.log('Debug - Formatted (Y-m-d):', parsedDate.toISOString().split('T')[0]);
-    
-    return dob;
-}
+            input.classList.remove('is-invalid');
+            return true;
+        }
     </script>
 @endsection

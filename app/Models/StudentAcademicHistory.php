@@ -13,66 +13,78 @@ class StudentAcademicHistory extends Model
         'student_id',
         'academic_year',
         'year',
-        'status',
+        'semester',
         'cgpa',
-        'subjects_passed',
-        'subjects_failed',
+        'status',
         'remarks',
         'approved_by',
-        'approved_at',
+        'approved_at'
     ];
 
     protected $casts = [
-        'subjects_passed' => 'array',
-        'subjects_failed' => 'array',
         'approved_at' => 'datetime',
+        'cgpa' => 'decimal:2'
     ];
 
-    /**
-     * Relationship with Student
-     */
+    // Relationships
     public function student()
     {
         return $this->belongsTo(Student::class);
     }
 
-    /**
-     * Relationship with User (Approver)
-     */
     public function approver()
     {
-        return $this->belongsTo(User::class, 'approved_by');
+        return $this->belongsTo(Admin::class, 'approved_by');
     }
 
-    /**
-     * Scope for passed students
-     */
-    public function scopePassed($query)
+    // Status constants
+    const STATUS_PASSED = 'passed';
+    const STATUS_FAILED = 'failed';
+    const STATUS_RETAKE = 'retake';
+    const STATUS_IMPROVEMENT = 'improvement';
+
+    // Year constants
+    const YEAR_FIRST = 1;
+    const YEAR_SECOND = 2;
+    const YEAR_THIRD = 3;
+    const YEAR_FOURTH = 4;
+    const YEAR_FIFTH = 5;
+
+    // Methods
+    public function getYearNameAttribute()
     {
-        return $query->where('status', 'passed');
+        $yearNames = [
+            self::YEAR_FIRST => 'First Year',
+            self::YEAR_SECOND => 'Second Year',
+            self::YEAR_THIRD => 'Third Year',
+            self::YEAR_FOURTH => 'Fourth Year',
+            self::YEAR_FIFTH => 'Fifth Year',
+        ];
+
+        return $yearNames[$this->year] ?? 'Unknown Year';
     }
 
-    /**
-     * Scope for failed students
-     */
-    public function scopeFailed($query)
+    public function getStatusBadgeAttribute()
     {
-        return $query->where('status', 'failed');
+        $badges = [
+            self::STATUS_PASSED => 'badge bg-success',
+            self::STATUS_FAILED => 'badge bg-danger',
+            self::STATUS_RETAKE => 'badge bg-warning',
+            self::STATUS_IMPROVEMENT => 'badge bg-info',
+        ];
+
+        return $badges[$this->status] ?? 'badge bg-secondary';
     }
 
-    /**
-     * Scope for specific academic year
-     */
-    public function scopeForAcademicYear($query, $academicYear)
+    public function getStatusTextAttribute()
     {
-        return $query->where('academic_year', $academicYear);
-    }
+        $statuses = [
+            self::STATUS_PASSED => 'Passed',
+            self::STATUS_FAILED => 'Failed',
+            self::STATUS_RETAKE => 'Retake',
+            self::STATUS_IMPROVEMENT => 'Improvement',
+        ];
 
-    /**
-     * Scope for specific year level
-     */
-    public function scopeForYearLevel($query, $year)
-    {
-        return $query->where('year', $year);
+        return $statuses[$this->status] ?? 'Unknown';
     }
 }
