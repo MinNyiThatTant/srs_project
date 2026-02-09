@@ -142,7 +142,7 @@ php artisan make:migration create_registrations_table
 php artisan make:migration create_finances_table
 ```
 ______________________________________________________________________________________________________________
-## 🧑‍🎓Student Registration System(SRS) created by <span style="color: blue;">E-service-Group(1/2025)</span>
+## 🧑‍🎓Student Registration System(SRS)<span style="color: blue;">(1/2025)</span>
 
 SRS is a web-based application designed to streamline the process of student registration and course management for Technological University targeting WYTU(sample).
 
